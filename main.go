@@ -230,6 +230,10 @@ func postuser(c *gin.Context) {
 	c.HTML(200, "index.html", gin.H{"result": result})
 }
 
+func AlreadyName(username string) {
+
+}
+
 // func deletecheck(c *gin.Context) {
 // 	id := c.Param("id")
 // 	// id := c.Param("id")
