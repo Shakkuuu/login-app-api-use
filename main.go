@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os/exec"
 
 	"github.com/gin-gonic/gin"
 )
@@ -49,6 +50,7 @@ func main() {
 	r.POST("/postbihin", postuser)
 	// r.POST("/deletebihin/:id", deletebihin)
 	// r.POST("/putbihin", putbihin)
+	r.GET("/aaa/:name", aaa)
 
 	r.Run(":8082")
 }
@@ -186,14 +188,23 @@ func postuser(c *gin.Context) {
 	password := c.PostForm("password")
 	checkpass := c.PostForm("checkpassword")
 
+	if username == "" || password == "" {
+		msg := "入力されてない項目があるよ"
+		c.HTML(http.StatusBadRequest, "index.html", gin.H{"message": msg})
+		return
+	}
+
 	if password != checkpass {
 		msg := "パスワードが一致していないよ"
 		c.HTML(http.StatusBadRequest, "index.html", gin.H{"message": msg})
 		return
 	}
 
-	if username == "" || password == "" {
-		msg := "入力されてない項目があるよ"
+	// aaa := AlreadyName(username)
+	// fmt.Println(aaa)
+	if m := AlreadyName(username); m == "aru" {
+		// msg := m
+		msg := "その名前は既にあります"
 		c.HTML(http.StatusBadRequest, "index.html", gin.H{"message": msg})
 		return
 	}
@@ -230,8 +241,46 @@ func postuser(c *gin.Context) {
 	c.HTML(200, "index.html", gin.H{"result": result})
 }
 
-func AlreadyName(username string) {
+func aaa(c *gin.Context) {
+	bb := c.Param("name")
+	url := "http://localhost:8081/users/showname/" + bb
+	d, _ := exec.Command("curl", url, "-X", "GET").Output()
+	// d, _ := http.Get(url)
+	fmt.Println(d)
+	if len(d) == 2 {
+		fmt.Println("gg")
+	}
+}
 
+func AlreadyName(username string) string {
+	url := "http://localhost:8081/users/showname/" + username
+
+	b, _ := exec.Command("curl", url, "-X", "GET").Output()
+
+	if len(b) == 2 {
+		// fmt.Println(b)
+		// fmt.Println(err)
+		fmt.Println("まだない")
+		msg := "no"
+		return msg
+	}
+
+	// fmt.Println(username)
+	// b, err := http.Get(url)
+	// fmt.Println(b)
+	// fmt.Println(err)
+
+	// if b == nil {
+	// 	// fmt.Println(b)
+	// 	fmt.Println(err)
+	// 	fmt.Println("まだない")
+	// 	// msg := "ng"
+	// 	return err
+	// }
+
+	fmt.Println("既にある")
+	msg := "aru"
+	return msg
 }
 
 // func deletecheck(c *gin.Context) {
