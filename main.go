@@ -45,13 +45,14 @@ func main() {
 
 	r.GET("/", index)
 	r.GET("/login", login)
+	r.GET("/signup", signup)
 	// r.GET("/idshow", idshow)
 	// r.GET("/danshow", danshow)
 	// r.GET("/listbihin", listbihin)
 	// r.GET("/koushincheck/:id", koushincheck)
 	// r.GET("/deletecheck/:id", deletecheck)
-	r.POST("/postuser", postuser)
 	r.POST("/loginuser", loginuser)
+	r.POST("/signupuser", signupuser)
 	// r.POST("/deletebihin/:id", deletebihin)
 	// r.POST("/putbihin", putbihin)
 	// r.GET("/aaa/:name", aaa)
@@ -65,6 +66,10 @@ func index(c *gin.Context) {
 
 func login(c *gin.Context) {
 	c.HTML(200, "login.html", nil)
+}
+
+func signup(c *gin.Context) {
+	c.HTML(200, "signup.html", nil)
 }
 
 func loginuser(c *gin.Context) {
@@ -138,6 +143,88 @@ func logincheck(username string, password string) string {
 	}
 
 	msg := "ok"
+	return msg
+}
+
+func signupuser(c *gin.Context) {
+	url := "http://localhost:8081/users"
+	username := c.PostForm("username")
+	password := c.PostForm("password")
+	checkpass := c.PostForm("checkpassword")
+
+	if username == "" || password == "" || checkpass == "" {
+		msg := "入力されてない項目があるよ"
+		c.HTML(http.StatusBadRequest, "signup.html", gin.H{"message": msg})
+		return
+	}
+
+	if password != checkpass {
+		msg := "パスワードが一致していないよ"
+		c.HTML(http.StatusBadRequest, "signup.html", gin.H{"message": msg})
+		return
+	}
+
+	// aaa := AlreadyName(username)
+	// fmt.Println(aaa)
+	if m := AlreadyName(username); m == "aru" {
+		// msg := m
+		msg := "その名前は既にあります"
+		c.HTML(http.StatusBadRequest, "signup.html", gin.H{"message": msg})
+		return
+	}
+
+	jsonStr := `{"Name":"` + username + `","Password":"` + password + `"}`
+
+	req, err := http.NewRequest(
+		"POST",
+		url,
+		bytes.NewBuffer([]byte(jsonStr)),
+	)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Content-Type 設定
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer resp.Body.Close()
+
+	result := username + "を登録しました。"
+
+	c.HTML(200, "index.html", gin.H{"result": result})
+}
+
+// func aaa(c *gin.Context) {
+// 	bb := c.Param("name")
+// 	url := "http://localhost:8081/users/showname/" + bb
+// 	d, _ := exec.Command("curl", url, "-X", "GET").Output()
+// 	// d, _ := http.Get(url)
+// 	fmt.Println(d)
+// 	if len(d) == 2 {
+// 		fmt.Println("gg")
+// 	}
+// }
+
+func AlreadyName(username string) string {
+	url := "http://localhost:8081/users/showname/" + username
+
+	b, _ := exec.Command("curl", url, "-X", "GET").Output()
+
+	if len(b) == 2 {
+		// fmt.Println(b)
+		// fmt.Println(err)
+		fmt.Println("まだない")
+		msg := "no"
+		return msg
+	}
+
+	fmt.Println("既にある")
+	msg := "aru"
 	return msg
 }
 
@@ -263,107 +350,6 @@ func logincheck(username string, password string) string {
 // 	// c.JSON(http.StatusOK, gin.H{"item": d})
 // 	c.HTML(200, "list.html", gin.H{"bihins": d})
 // }
-
-func postuser(c *gin.Context) {
-	url := "http://localhost:8081/users"
-	username := c.PostForm("username")
-	password := c.PostForm("password")
-	checkpass := c.PostForm("checkpassword")
-
-	if username == "" || password == "" || checkpass == "" {
-		msg := "入力されてない項目があるよ"
-		c.HTML(http.StatusBadRequest, "index.html", gin.H{"message": msg})
-		return
-	}
-
-	if password != checkpass {
-		msg := "パスワードが一致していないよ"
-		c.HTML(http.StatusBadRequest, "index.html", gin.H{"message": msg})
-		return
-	}
-
-	// aaa := AlreadyName(username)
-	// fmt.Println(aaa)
-	if m := AlreadyName(username); m == "aru" {
-		// msg := m
-		msg := "その名前は既にあります"
-		c.HTML(http.StatusBadRequest, "index.html", gin.H{"message": msg})
-		return
-	}
-
-	jsonStr := `{"Name":"` + username + `","Password":"` + password + `"}`
-
-	req, err := http.NewRequest(
-		"POST",
-		url,
-		bytes.NewBuffer([]byte(jsonStr)),
-	)
-	if err != nil {
-		msg := "登録できなかった"
-		c.HTML(200, "error.html", gin.H{"err": err, "message": msg})
-		// log.Fatal(err)
-		return
-	}
-
-	// Content-Type 設定
-	req.Header.Set("Content-Type", "application/json")
-
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		msg := "登録できなかった"
-		c.HTML(200, "error.html", gin.H{"err": err, "message": msg})
-		// log.Fatal(err)
-		return
-	}
-	defer resp.Body.Close()
-
-	result := username + "を登録しました。"
-
-	c.HTML(200, "index.html", gin.H{"result": result})
-}
-
-// func aaa(c *gin.Context) {
-// 	bb := c.Param("name")
-// 	url := "http://localhost:8081/users/showname/" + bb
-// 	d, _ := exec.Command("curl", url, "-X", "GET").Output()
-// 	// d, _ := http.Get(url)
-// 	fmt.Println(d)
-// 	if len(d) == 2 {
-// 		fmt.Println("gg")
-// 	}
-// }
-
-func AlreadyName(username string) string {
-	url := "http://localhost:8081/users/showname/" + username
-
-	b, _ := exec.Command("curl", url, "-X", "GET").Output()
-
-	if len(b) == 2 {
-		// fmt.Println(b)
-		// fmt.Println(err)
-		fmt.Println("まだない")
-		msg := "no"
-		return msg
-	}
-
-	// fmt.Println(username)
-	// b, err := http.Get(url)
-	// fmt.Println(b)
-	// fmt.Println(err)
-
-	// if b == nil {
-	// 	// fmt.Println(b)
-	// 	fmt.Println(err)
-	// 	fmt.Println("まだない")
-	// 	// msg := "ng"
-	// 	return err
-	// }
-
-	fmt.Println("既にある")
-	msg := "aru"
-	return msg
-}
 
 // func deletecheck(c *gin.Context) {
 // 	id := c.Param("id")
