@@ -50,6 +50,7 @@ func main() {
 	r.GET("/", index)
 	r.GET("/login", login)
 	r.GET("/signup", signup)
+	r.GET("/logout", logout)
 
 	r.POST("/loginuser", loginuser)
 	r.POST("/signupuser", signupuser)
@@ -67,6 +68,9 @@ func top(c *gin.Context) {
 	// 	msg := "ログイン失敗?"
 	// 	c.HTML(200, "index.html", gin.H{"message": msg})
 	// }
+	if uname == "" {
+		uname = "ゲスト"
+	}
 	c.HTML(200, "top.html", gin.H{"user": uname})
 }
 
@@ -81,6 +85,13 @@ func login(c *gin.Context) {
 
 func signup(c *gin.Context) {
 	c.HTML(200, "signup.html", nil)
+}
+
+func logout(c *gin.Context) {
+	session := sessions.Default(c)
+	session.Clear()
+	session.Save()
+	c.Redirect(303, "/login")
 }
 
 func UserGet() []string {
