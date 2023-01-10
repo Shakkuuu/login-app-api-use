@@ -47,10 +47,10 @@ func main() {
 	// r.GET("/listbihin", listbihin)
 	// r.GET("/koushincheck/:id", koushincheck)
 	// r.GET("/deletecheck/:id", deletecheck)
-	r.POST("/postbihin", postuser)
+	r.POST("/postuser", postuser)
 	// r.POST("/deletebihin/:id", deletebihin)
 	// r.POST("/putbihin", putbihin)
-	r.GET("/aaa/:name", aaa)
+	// r.GET("/aaa/:name", aaa)
 
 	r.Run(":8082")
 }
@@ -241,16 +241,16 @@ func postuser(c *gin.Context) {
 	c.HTML(200, "index.html", gin.H{"result": result})
 }
 
-func aaa(c *gin.Context) {
-	bb := c.Param("name")
-	url := "http://localhost:8081/users/showname/" + bb
-	d, _ := exec.Command("curl", url, "-X", "GET").Output()
-	// d, _ := http.Get(url)
-	fmt.Println(d)
-	if len(d) == 2 {
-		fmt.Println("gg")
-	}
-}
+// func aaa(c *gin.Context) {
+// 	bb := c.Param("name")
+// 	url := "http://localhost:8081/users/showname/" + bb
+// 	d, _ := exec.Command("curl", url, "-X", "GET").Output()
+// 	// d, _ := http.Get(url)
+// 	fmt.Println(d)
+// 	if len(d) == 2 {
+// 		fmt.Println("gg")
+// 	}
+// }
 
 func AlreadyName(username string) string {
 	url := "http://localhost:8081/users/showname/" + username
