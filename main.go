@@ -9,6 +9,8 @@ import (
 	"net/http"
 	"os/exec"
 
+	"github.com/gin-contrib/sessions"
+	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
 )
 
@@ -42,22 +44,30 @@ func main() {
 
 	r := gin.Default()
 	r.LoadHTMLGlob("views/*.html")
+	store := cookie.NewStore([]byte("secret"))
+	r.Use(sessions.Sessions("mysession", store))
 
 	r.GET("/", index)
 	r.GET("/login", login)
 	r.GET("/signup", signup)
-	// r.GET("/idshow", idshow)
-	// r.GET("/danshow", danshow)
-	// r.GET("/listbihin", listbihin)
-	// r.GET("/koushincheck/:id", koushincheck)
-	// r.GET("/deletecheck/:id", deletecheck)
+
 	r.POST("/loginuser", loginuser)
 	r.POST("/signupuser", signupuser)
-	// r.POST("/deletebihin/:id", deletebihin)
-	// r.POST("/putbihin", putbihin)
-	// r.GET("/aaa/:name", aaa)
+
+	menu := r.Group("/menu")
+	menu.GET("/top", top)
 
 	r.Run(":8082")
+}
+
+func top(c *gin.Context) {
+	session := sessions.Default(c)
+	uname, _ := session.Get("uname").(string)
+	// if err != false {
+	// 	msg := "ログイン失敗?"
+	// 	c.HTML(200, "index.html", gin.H{"message": msg})
+	// }
+	c.HTML(200, "top.html", gin.H{"user": uname})
 }
 
 func index(c *gin.Context) {
@@ -107,6 +117,8 @@ func UserGet() []string {
 }
 
 func loginuser(c *gin.Context) {
+	session := sessions.Default(c)
+
 	// url := "http://localhost:8081/users"
 	username := c.PostForm("username")
 	password := c.PostForm("password")
@@ -128,9 +140,13 @@ func loginuser(c *gin.Context) {
 		return
 	}
 
-	result := username + "でログインしました。"
+	session.Set("uname", username)
+	session.Save()
 
-	c.HTML(200, "index.html", gin.H{"result": result})
+	// result := username + "でログインしました。"
+
+	// c.HTML(200, "index.html", gin.H{"result": result})
+	c.Redirect(303, "/menu/top")
 }
 
 func LoginCheck(username string, password string) string {
