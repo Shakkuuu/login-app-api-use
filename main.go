@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
+	"log"
 	"net/http"
 	"os/exec"
 
@@ -42,12 +44,14 @@ func main() {
 	r.LoadHTMLGlob("views/*.html")
 
 	r.GET("/", index)
+	r.GET("/login", login)
 	// r.GET("/idshow", idshow)
 	// r.GET("/danshow", danshow)
 	// r.GET("/listbihin", listbihin)
 	// r.GET("/koushincheck/:id", koushincheck)
 	// r.GET("/deletecheck/:id", deletecheck)
 	r.POST("/postuser", postuser)
+	r.POST("/loginuser", loginuser)
 	// r.POST("/deletebihin/:id", deletebihin)
 	// r.POST("/putbihin", putbihin)
 	// r.GET("/aaa/:name", aaa)
@@ -57,6 +61,84 @@ func main() {
 
 func index(c *gin.Context) {
 	c.HTML(200, "index.html", nil)
+}
+
+func login(c *gin.Context) {
+	c.HTML(200, "login.html", nil)
+}
+
+func loginuser(c *gin.Context) {
+	// url := "http://localhost:8081/users"
+	username := c.PostForm("username")
+	password := c.PostForm("password")
+
+	if username == "" || password == "" {
+		msg := "入力されてない項目があるよ"
+		c.HTML(http.StatusBadRequest, "login.html", gin.H{"message": msg})
+		return
+	}
+
+	m := logincheck(username, password)
+	if m == "inai" {
+		msg := "そのusernameはいません"
+		c.HTML(http.StatusBadRequest, "login.html", gin.H{"message": msg})
+		return
+	} else if m == "no" {
+		msg := "パスワードが間違っています"
+		c.HTML(http.StatusBadRequest, "login.html", gin.H{"message": msg})
+		return
+	}
+
+	result := username + "でログインしました。"
+
+	c.HTML(200, "index.html", gin.H{"result": result})
+}
+
+func logincheck(username string, password string) string {
+	url := "http://localhost:8081/users/showname/" + username
+
+	b, _ := exec.Command("curl", url, "-X", "GET").Output()
+
+	if len(b) == 2 {
+		// fmt.Println(b)
+		// fmt.Println(err)
+		fmt.Println("そのuserいない")
+		msg := "inai"
+		return msg
+	}
+
+	resp, err := http.Get(url)
+	if err != nil {
+		log.Fatal(err)
+		// return
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		// msg := "id見つからないよ"
+		// c.HTML(200, "error.html", gin.H{"err": err, "message": msg})
+		log.Fatal(err)
+		// return
+	}
+
+	fmt.Println(string(body))
+
+	var d User
+
+	if err := json.Unmarshal(body, &d); err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(d)
+
+	checkpass := d.Password
+	if checkpass != password {
+		msg := "no"
+		return msg
+	}
+
+	msg := "ok"
+	return msg
 }
 
 // func idshow(c *gin.Context) {
@@ -188,7 +270,7 @@ func postuser(c *gin.Context) {
 	password := c.PostForm("password")
 	checkpass := c.PostForm("checkpassword")
 
-	if username == "" || password == "" {
+	if username == "" || password == "" || checkpass == "" {
 		msg := "入力されてない項目があるよ"
 		c.HTML(http.StatusBadRequest, "index.html", gin.H{"message": msg})
 		return
