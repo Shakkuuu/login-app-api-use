@@ -61,7 +61,8 @@ func main() {
 }
 
 func index(c *gin.Context) {
-	c.HTML(200, "index.html", nil)
+	u := UserGet()
+	c.HTML(200, "index.html", gin.H{"users": u})
 }
 
 func login(c *gin.Context) {
@@ -70,6 +71,39 @@ func login(c *gin.Context) {
 
 func signup(c *gin.Context) {
 	c.HTML(200, "signup.html", nil)
+}
+
+func UserGet() []string {
+	url := "http://localhost:8081/users"
+	resp, err := http.Get(url)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// fmt.Println(string(body))
+
+	var d []User
+
+	if err := json.Unmarshal(body, &d); err != nil {
+		log.Fatal(err)
+	}
+
+	// fmt.Println(d)
+
+	var userslice []string
+
+	for _, v := range d {
+		userslice = append(userslice, v.Name)
+	}
+
+	return userslice
+
 }
 
 func loginuser(c *gin.Context) {
@@ -83,7 +117,7 @@ func loginuser(c *gin.Context) {
 		return
 	}
 
-	m := logincheck(username, password)
+	m := LoginCheck(username, password)
 	if m == "inai" {
 		msg := "そのusernameはいません"
 		c.HTML(http.StatusBadRequest, "login.html", gin.H{"message": msg})
@@ -99,7 +133,7 @@ func loginuser(c *gin.Context) {
 	c.HTML(200, "index.html", gin.H{"result": result})
 }
 
-func logincheck(username string, password string) string {
+func LoginCheck(username string, password string) string {
 	url := "http://localhost:8081/users/showname/" + username
 
 	b, _ := exec.Command("curl", url, "-X", "GET").Output()

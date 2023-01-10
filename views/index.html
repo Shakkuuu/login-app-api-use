@@ -8,16 +8,15 @@
     <h2>user</h2>
     {{.message}}
     {{.result}}
-    <!-- <p>{{.bihins}}</p> -->
-    <!-- {{range $v := .bihins}}
+    <!-- <p>{{.users}}</p> -->
+    <p>user一覧</p>
+    {{range $v := .users}}
         <div>
             <div>
-                <p>{{$v.Shishutsuid}},{{$v.Dantaimei}},{{$v.Bihin}}</p>
-                <label><a href="/koushincheck/{{$v.ID}}">更新</a></label>
-                <p><a href="/deletecheck/{{$v.ID}}">削除</a></p>
+                <p>{{$v}}</p>
             </div>
         </div>
-    {{end}} -->
+    {{end}}
     <!-- <p>削除</p>
     <form action="/deletebihin" method="POST">
         <input type="text" name="id" placeholder="例:1">
