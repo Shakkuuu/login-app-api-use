@@ -59,8 +59,10 @@ func main() {
 	menu := r.Group("/menu")
 	menu.GET("/top", top)
 	menu.GET("/deleteuser", deleteusercheck)
+	menu.GET("/renameuser", renameusercheck)
 
 	menu.POST("/deleteuser", deleteuser)
+	menu.POST("/renameuser", renameuser)
 
 	r.Run(":8082")
 }
@@ -105,6 +107,12 @@ func deleteusercheck(c *gin.Context) {
 	session := sessions.Default(c)
 	uname, _ := session.Get("uname").(string)
 	c.HTML(200, "deleteuser.html", gin.H{"username": uname})
+}
+
+func renameusercheck(c *gin.Context) {
+	session := sessions.Default(c)
+	uname, _ := session.Get("uname").(string)
+	c.HTML(200, "renameuser.html", gin.H{"username": uname})
 }
 
 func UserGet() []string {
@@ -363,6 +371,74 @@ func deleteuser(c *gin.Context) {
 	// c.HTML(200, "index.html", gin.H{"result": result})
 }
 
+func renameuser(c *gin.Context) {
+	session := sessions.Default(c)
+	uname, _ := session.Get("uname").(string)
+	url1 := "http://localhost:8081/users/showname/" + uname
+
+	resp1, err := http.Get(url1)
+	if err != nil {
+		log.Fatal(err)
+		// return
+	}
+	defer resp1.Body.Close()
+
+	body1, err := io.ReadAll(resp1.Body)
+	if err != nil {
+		// msg := "id見つからないよ"
+		// c.HTML(200, "error.html", gin.H{"err": err, "message": msg})
+		log.Fatal(err)
+		// return
+	}
+
+	var d User
+
+	if err := json.Unmarshal(body1, &d); err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(d)
+
+	id := strconv.Itoa(d.ID)
+	password := d.Password
+	rename := c.PostForm("rename")
+	url2 := "http://localhost:8081/users/" + id
+
+	if rename == "" {
+		// msg := "入力されてない項目があるよ"
+		// c.HTML(200, "error.html", gin.H{"message": msg})
+		c.Redirect(303, "/menu/renameuser")
+		return
+	}
+
+	jsonStr := `{"Name":"` + rename + `","Password":"` + password + `"}`
+	req, err := http.NewRequest(
+		"PUT",
+		url2,
+		bytes.NewBuffer([]byte(jsonStr)),
+	)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Content-Type 設定
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer resp.Body.Close()
+
+	result := "usernameを更新しました。"
+
+	session.Set("uname", rename)
+	session.Save()
+	reuname, _ := session.Get("uname").(string)
+
+	c.HTML(200, "top.html", gin.H{"user": reuname, "result": result})
+}
+
 // func idshow(c *gin.Context) {
 // 	msg := "見つかりました"
 // 	id := c.Query("id")
@@ -587,35 +663,35 @@ func deleteuser(c *gin.Context) {
 // 	note := c.PostForm("note")
 // 	shishutsuid := c.PostForm("shishutsuid")
 
-// 	if knrid == "" || bihin == "" || dantai == "" || place == "" || price == "" || qty == "" || partnum == "" || note == "" || shishutsuid == "" {
-// 		// msg := "入力されてない項目があるよ"
-// 		// c.HTML(200, "error.html", gin.H{"message": msg})
-// 		c.Redirect(303, "/koushincheck/"+id)
-// 		return
-// 	}
+// if knrid == "" || bihin == "" || dantai == "" || place == "" || price == "" || qty == "" || partnum == "" || note == "" || shishutsuid == "" {
+// 	// msg := "入力されてない項目があるよ"
+// 	// c.HTML(200, "error.html", gin.H{"message": msg})
+// 	c.Redirect(303, "/koushincheck/"+id)
+// 	return
+// }
 
-// 	jsonStr := `{"KnrId":"` + knrid + `","Bihin":"` + bihin + `","Dantai":"` + dantai + `","Place":"` + place + `","Price":"` + price + `","Qty":"` + qty + `","PartNum":"` + partnum + `","Note":"` + note + `","Shishutsuid":"` + shishutsuid + `"}`
+// jsonStr := `{"KnrId":"` + knrid + `","Bihin":"` + bihin + `","Dantai":"` + dantai + `","Place":"` + place + `","Price":"` + price + `","Qty":"` + qty + `","PartNum":"` + partnum + `","Note":"` + note + `","Shishutsuid":"` + shishutsuid + `"}`
 
-// 	req, err := http.NewRequest(
-// 		"PUT",
-// 		url,
-// 		bytes.NewBuffer([]byte(jsonStr)),
-// 	)
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
+// req, err := http.NewRequest(
+// 	"PUT",
+// 	url,
+// 	bytes.NewBuffer([]byte(jsonStr)),
+// )
+// if err != nil {
+// 	log.Fatal(err)
+// }
 
-// 	// Content-Type 設定
-// 	req.Header.Set("Content-Type", "application/json")
+// // Content-Type 設定
+// req.Header.Set("Content-Type", "application/json")
 
-// 	client := &http.Client{}
-// 	resp, err := client.Do(req)
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
-// 	defer resp.Body.Close()
+// client := &http.Client{}
+// resp, err := client.Do(req)
+// if err != nil {
+// 	log.Fatal(err)
+// }
+// defer resp.Body.Close()
 
-// 	result := "更新しました。"
+// result := "更新しました。"
 
-// 	c.HTML(200, "index.html", gin.H{"result": result})
+// c.HTML(200, "index.html", gin.H{"result": result})
 // }
