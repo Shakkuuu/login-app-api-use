@@ -70,6 +70,9 @@ func top(c *gin.Context) {
 	// }
 	if uname == "" {
 		uname = "ゲスト"
+		msg := "現在ゲストでログインしています。ログインしましょう。"
+		c.HTML(200, "top.html", gin.H{"user": uname, "message": msg})
+		return
 	}
 	c.HTML(200, "top.html", gin.H{"user": uname})
 }
@@ -208,6 +211,8 @@ func LoginCheck(username string, password string) string {
 }
 
 func signupuser(c *gin.Context) {
+	session := sessions.Default(c)
+
 	url := "http://localhost:8081/users"
 	username := c.PostForm("username")
 	password := c.PostForm("password")
@@ -255,9 +260,14 @@ func signupuser(c *gin.Context) {
 	}
 	defer resp.Body.Close()
 
-	result := username + "を登録しました。"
+	session.Set("uname", username)
+	session.Save()
 
-	c.HTML(200, "index.html", gin.H{"result": result})
+	c.Redirect(303, "/menu/top")
+
+	// result := username + "を登録しました。"
+
+	// c.HTML(200, "index.html", gin.H{"result": result})
 }
 
 // func aaa(c *gin.Context) {
