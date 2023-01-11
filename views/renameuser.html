@@ -8,7 +8,7 @@
     <h2>rename</h2>
     <p>username更新</p>
     {{.username}}
-    <form action="/menu/renameuser" method="POST">
+    <form action="/menu/settings/renameuser" method="POST">
         <input type="text" name="rename" value={{.username}} placeholder="rename">
         <p><input type="submit" value="更新"></p>
     </form>

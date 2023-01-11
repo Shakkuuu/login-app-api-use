@@ -58,11 +58,13 @@ func main() {
 
 	menu := r.Group("/menu")
 	menu.GET("/top", top)
-	menu.GET("/deleteuser", deleteusercheck)
-	menu.GET("/renameuser", renameusercheck)
 
-	menu.POST("/deleteuser", deleteuser)
-	menu.POST("/renameuser", renameuser)
+	settings := menu.Group("/settings")
+	settings.GET("/deleteuser", deleteusercheck)
+	settings.GET("/renameuser", renameusercheck)
+
+	settings.POST("/deleteuser", deleteuser)
+	settings.POST("/renameuser", renameuser)
 
 	r.Run(":8082")
 }
@@ -406,7 +408,7 @@ func renameuser(c *gin.Context) {
 	if rename == "" {
 		// msg := "入力されてない項目があるよ"
 		// c.HTML(200, "error.html", gin.H{"message": msg})
-		c.Redirect(303, "/menu/renameuser")
+		c.Redirect(303, "/menu/settings/renameuser")
 		return
 	}
 
