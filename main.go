@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"os/exec"
+	"strconv"
 
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-contrib/sessions/cookie"
@@ -52,11 +53,14 @@ func main() {
 	r.GET("/signup", signup)
 	r.GET("/logout", logout)
 
-	r.POST("/loginuser", loginuser)
-	r.POST("/signupuser", signupuser)
+	r.POST("/login", loginuser)
+	r.POST("/signup", signupuser)
 
 	menu := r.Group("/menu")
 	menu.GET("/top", top)
+	menu.GET("/deleteuser", deleteusercheck)
+
+	menu.POST("/deleteuser", deleteuser)
 
 	r.Run(":8082")
 }
@@ -70,7 +74,7 @@ func top(c *gin.Context) {
 	// }
 	if uname == "" {
 		uname = "ゲスト"
-		msg := "現在ゲストでログインしています。ログインしましょう。"
+		msg := "現在ゲストで使用しています。ログインしましょう。"
 		c.HTML(200, "top.html", gin.H{"user": uname, "message": msg})
 		return
 	}
@@ -95,6 +99,12 @@ func logout(c *gin.Context) {
 	session.Clear()
 	session.Save()
 	c.Redirect(303, "/login")
+}
+
+func deleteusercheck(c *gin.Context) {
+	session := sessions.Default(c)
+	uname, _ := session.Get("uname").(string)
+	c.HTML(200, "deleteuser.html", gin.H{"username": uname})
 }
 
 func UserGet() []string {
@@ -299,6 +309,60 @@ func AlreadyName(username string) string {
 	return msg
 }
 
+func deleteuser(c *gin.Context) {
+	session := sessions.Default(c)
+	uname, _ := session.Get("uname").(string)
+	url1 := "http://localhost:8081/users/showname/" + uname
+
+	resp1, err := http.Get(url1)
+	if err != nil {
+		log.Fatal(err)
+		// return
+	}
+	defer resp1.Body.Close()
+
+	body1, err := io.ReadAll(resp1.Body)
+	if err != nil {
+		// msg := "id見つからないよ"
+		// c.HTML(200, "error.html", gin.H{"err": err, "message": msg})
+		log.Fatal(err)
+		// return
+	}
+
+	var d User
+
+	if err := json.Unmarshal(body1, &d); err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(d)
+
+	id := strconv.Itoa(d.ID)
+	url2 := "http://localhost:8081/users/" + id
+
+	req2, err := http.NewRequest("DELETE", url2, nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	client := &http.Client{}
+	resp2, err := client.Do(req2)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer resp2.Body.Close()
+
+	session.Clear()
+	session.Save()
+
+	result := "userを削除しました。"
+
+	uname = "ゲスト"
+	msg := "現在ゲストで使用しています。ログインしましょう。"
+	c.HTML(200, "top.html", gin.H{"user": uname, "message": msg, "result": result})
+
+	// c.HTML(200, "index.html", gin.H{"result": result})
+}
+
 // func idshow(c *gin.Context) {
 // 	msg := "見つかりました"
 // 	id := c.Query("id")
@@ -457,25 +521,25 @@ func AlreadyName(username string) string {
 // }
 
 // func deletebihin(c *gin.Context) {
-// 	id := c.Param("id")
-// 	// id := c.Param("id")
-// 	url := "http://localhost:8080/bihins/" + id
+// id := c.Param("id")
+// // id := c.Param("id")
+// url := "http://localhost:8080/bihins/" + id
 
-// 	req, err := http.NewRequest("DELETE", url, nil)
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
+// req, err := http.NewRequest("DELETE", url, nil)
+// if err != nil {
+// 	log.Fatal(err)
+// }
 
-// 	client := &http.Client{}
-// 	resp, err := client.Do(req)
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
-// 	defer resp.Body.Close()
+// client := &http.Client{}
+// resp, err := client.Do(req)
+// if err != nil {
+// 	log.Fatal(err)
+// }
+// defer resp.Body.Close()
 
-// 	result := "削除しました。"
+// result := "削除しました。"
 
-// 	c.HTML(200, "index.html", gin.H{"result": result})
+// c.HTML(200, "index.html", gin.H{"result": result})
 // }
 
 // func koushincheck(c *gin.Context) {

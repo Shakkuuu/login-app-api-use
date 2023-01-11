@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>deleteuser</title>
+</head>
+<body>
+    <h2>deleteuser</h2>
+    <p>user削除確認</p>
+    <p>{{.username}} を本当に削除するん？</p>
+    <form method="POST" action="/menu/deleteuser">
+        <p><input type="submit" value="削除"></p>
+    </form>
+    <p><a href="/menu/top">戻る</a></p>
+</body>
+</html>
