@@ -15,12 +15,14 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// userの構造体
 type User struct {
 	ID       int    `json:"id"`
 	Name     string `json:"name"`
 	Password string `json:"password"`
 }
 
+// memoの構造体
 type Memo struct {
 	ID    int    `json:"id"`
 	Name  string `json:"name"`
@@ -28,6 +30,7 @@ type Memo struct {
 	Text  string `json:"text"`
 }
 
+// UserのJSONをUser構造体にデコード
 func (u *User) UnmarshalJSON(body []byte) error {
 	// 自分で新しく定義した構造体
 	u2 := &struct {
@@ -39,7 +42,7 @@ func (u *User) UnmarshalJSON(body []byte) error {
 	if err != nil {
 		panic(err)
 	}
-	// 新しく定義した構造体の結果をもとのiに詰める
+	// 新しく定義した構造体の結果をもとのmに詰める
 	u.ID = u2.ID
 	u.Name = u2.Name
 	u.Password = u2.Password
@@ -47,6 +50,7 @@ func (u *User) UnmarshalJSON(body []byte) error {
 	return err
 }
 
+// MemoのJSONをMemo構造体にデコード
 func (m *Memo) UnmarshalJSON(body []byte) error {
 	// 自分で新しく定義した構造体
 	m2 := &struct {
@@ -59,7 +63,7 @@ func (m *Memo) UnmarshalJSON(body []byte) error {
 	if err != nil {
 		panic(err)
 	}
-	// 新しく定義した構造体の結果をもとのiに詰める
+	// 新しく定義した構造体の結果をもとのmに詰める
 	m.ID = m2.ID
 	m.Name = m2.Name
 	m.Title = m2.Title
@@ -76,6 +80,7 @@ func main() {
 	store := cookie.NewStore([]byte("secret"))
 	r.Use(sessions.Sessions("mysession", store))
 
+	// ログインページ
 	r.GET("/", index)
 	r.GET("/login", login)
 	r.GET("/signup", signup)
@@ -84,11 +89,13 @@ func main() {
 	r.POST("/login", loginuser)
 	r.POST("/signup", signupuser)
 
+	// ログイン後のトップページ
 	menu := r.Group("/menu")
 	menu.GET("/top", top)
 	menu.GET("/memo", memo)
 	menu.POST("/memo", memocreate)
 
+	// user設定ページ
 	settings := menu.Group("/settings")
 	settings.GET("/deleteuser", deleteusercheck)
 	settings.GET("/renameuser", renameusercheck)
@@ -96,29 +103,36 @@ func main() {
 	settings.POST("/deleteuser", deleteuser)
 	settings.POST("/renameuser", renameuser)
 
+	// 8082ポートで起動
 	r.Run(":8082")
 }
 
+// ログイン後のトップページ
 func top(c *gin.Context) {
+	// ログインしているユーザー名を取得
 	session := sessions.Default(c)
 	uname, _ := session.Get("uname").(string)
-	// if err != false {
-	// 	msg := "ログイン失敗?"
-	// 	c.HTML(200, "index.html", gin.H{"message": msg})
-	// }
+
+	// ログインせずにアクセスされた場合のゲストモード
 	if uname == "" {
 		uname = "ゲスト"
 		msg := "現在ゲストで使用しています。ログインしましょう。"
 		c.HTML(200, "top.html", gin.H{"user": uname, "message": msg})
 		return
 	}
+
 	c.HTML(200, "top.html", gin.H{"user": uname})
 }
 
+// ログイン前のindexページ
 func index(c *gin.Context) {
+	// 登録されているユーザーの一覧取得
 	u := UserGet()
+
 	c.HTML(200, "index.html", gin.H{"users": u})
 }
+
+// ログイン サインアップ ログアウトのページ表示
 
 func login(c *gin.Context) {
 	c.HTML(200, "login.html", nil)
@@ -130,10 +144,14 @@ func signup(c *gin.Context) {
 
 func logout(c *gin.Context) {
 	session := sessions.Default(c)
+	// ログアウトによるセッション削除
 	session.Clear()
 	session.Save()
+
 	c.Redirect(303, "/login")
 }
+
+// ユーザー削除とリネームのページ表示
 
 func deleteusercheck(c *gin.Context) {
 	session := sessions.Default(c)
@@ -147,7 +165,9 @@ func renameusercheck(c *gin.Context) {
 	c.HTML(200, "renameuser.html", gin.H{"username": uname})
 }
 
+// ユーザー一覧をapiから取得しusernameを配列にする
 func UserGet() []string {
+	// apiからユーザー一覧データの取得
 	url := "http://localhost:8081/users"
 	resp, err := http.Get(url)
 	if err != nil {
@@ -155,44 +175,43 @@ func UserGet() []string {
 	}
 	defer resp.Body.Close()
 
+	// 送られてきたjsonのopen
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	// fmt.Println(string(body))
-
+	// openしたjsonを構造体にデコード
 	var d []User
-
 	if err := json.Unmarshal(body, &d); err != nil {
 		log.Fatal(err)
 	}
 
-	// fmt.Println(d)
-
+	// デコードしたユーザーデータのNameを配列に入れる
 	var userslice []string
-
 	for _, v := range d {
 		userslice = append(userslice, v.Name)
 	}
 
 	return userslice
-
 }
 
+// ログイン処理
 func loginuser(c *gin.Context) {
 	session := sessions.Default(c)
 
-	// url := "http://localhost:8081/users"
+	// 入力内容の取得
 	username := c.PostForm("username")
 	password := c.PostForm("password")
 
+	// 未入力かチェック
 	if username == "" || password == "" {
 		msg := "入力されてない項目があるよ"
 		c.HTML(http.StatusBadRequest, "login.html", gin.H{"message": msg})
 		return
 	}
 
+	// データベースにユーザーが登録されているか、パスワードが合っているかチェック
 	m := LoginCheck(username, password)
 	if m == "inai" {
 		msg := "そのusernameはいません"
@@ -204,52 +223,48 @@ func loginuser(c *gin.Context) {
 		return
 	}
 
+	// ログインしたユーザーでセッション確立
 	session.Set("uname", username)
 	session.Save()
 
-	// result := username + "でログインしました。"
-
-	// c.HTML(200, "index.html", gin.H{"result": result})
 	c.Redirect(303, "/menu/top")
 }
 
+// ログインチェック
 func LoginCheck(username string, password string) string {
 	url := "http://localhost:8081/users/showname/" + username
 
+	// ユーザーが存在するかチェック
 	b, _ := exec.Command("curl", url, "-X", "GET").Output()
-
 	if len(b) == 2 {
-		// fmt.Println(b)
-		// fmt.Println(err)
 		fmt.Println("そのuserいない")
 		msg := "inai"
 		return msg
 	}
 
+	// apiからユーザーで検索して取得
 	resp, err := http.Get(url)
 	if err != nil {
 		log.Fatal(err)
-		// return
 	}
 	defer resp.Body.Close()
 
+	// 送られてきたjsonのオープン
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		// msg := "id見つからないよ"
-		// c.HTML(200, "error.html", gin.H{"err": err, "message": msg})
 		log.Fatal(err)
-		// return
 	}
 
 	fmt.Println(string(body))
 
+	// openしたjsonを構造体にデコード
 	var d User
-
 	if err := json.Unmarshal(body, &d); err != nil {
 		log.Fatal(err)
 	}
 	fmt.Println(d)
 
+	// パスワードが一致するか確認
 	checkpass := d.Password
 	if checkpass != password {
 		msg := "no"
@@ -260,37 +275,42 @@ func LoginCheck(username string, password string) string {
 	return msg
 }
 
+// ユーザー新規登録
 func signupuser(c *gin.Context) {
 	session := sessions.Default(c)
 
 	url := "http://localhost:8081/users"
+
+	// 入力内容の取得
 	username := c.PostForm("username")
 	password := c.PostForm("password")
 	checkpass := c.PostForm("checkpassword")
 
+	// 未入力の確認
 	if username == "" || password == "" || checkpass == "" {
 		msg := "入力されてない項目があるよ"
 		c.HTML(http.StatusBadRequest, "signup.html", gin.H{"message": msg})
 		return
 	}
 
+	// パスワードと確認用の再入力パスワードが一致するか確認
 	if password != checkpass {
 		msg := "パスワードが一致していないよ"
 		c.HTML(http.StatusBadRequest, "signup.html", gin.H{"message": msg})
 		return
 	}
 
-	// aaa := AlreadyName(username)
-	// fmt.Println(aaa)
+	// 入力されたユーザー名が既に登録されているか確認
 	if m := AlreadyName(username); m == "aru" {
-		// msg := m
 		msg := "その名前は既にあります"
 		c.HTML(http.StatusBadRequest, "signup.html", gin.H{"message": msg})
 		return
 	}
 
+	// apiへの送信用のjson設定
 	jsonStr := `{"Name":"` + username + `","Password":"` + password + `"}`
 
+	// apiへのユーザー情報送信
 	req, err := http.NewRequest(
 		"POST",
 		url,
@@ -310,14 +330,11 @@ func signupuser(c *gin.Context) {
 	}
 	defer resp.Body.Close()
 
+	// サインインしたユーザーでセッション確立
 	session.Set("uname", username)
 	session.Save()
 
 	c.Redirect(303, "/menu/top")
-
-	// result := username + "を登録しました。"
-
-	// c.HTML(200, "index.html", gin.H{"result": result})
 }
 
 // func aaa(c *gin.Context) {
@@ -331,14 +348,13 @@ func signupuser(c *gin.Context) {
 // 	}
 // }
 
+// 入力されたユーザーが既に登録されているか確認
 func AlreadyName(username string) string {
 	url := "http://localhost:8081/users/showname/" + username
 
+	// ユーザーが存在するかチェック
 	b, _ := exec.Command("curl", url, "-X", "GET").Output()
-
 	if len(b) == 2 {
-		// fmt.Println(b)
-		// fmt.Println(err)
 		fmt.Println("まだない")
 		msg := "no"
 		return msg
@@ -349,28 +365,29 @@ func AlreadyName(username string) string {
 	return msg
 }
 
+// ユーザーの削除
 func deleteuser(c *gin.Context) {
+	// ログイン中のユーザー取得
 	session := sessions.Default(c)
 	uname, _ := session.Get("uname").(string)
+
 	url1 := "http://localhost:8081/users/showname/" + uname
 
+	// ユーザー名からapiでid取得
 	resp1, err := http.Get(url1)
 	if err != nil {
 		log.Fatal(err)
-		// return
 	}
 	defer resp1.Body.Close()
 
+	// 取得したjsonのオープン
 	body1, err := io.ReadAll(resp1.Body)
 	if err != nil {
-		// msg := "id見つからないよ"
-		// c.HTML(200, "error.html", gin.H{"err": err, "message": msg})
 		log.Fatal(err)
-		// return
 	}
 
+	// openしたjsonを構造体にデコード
 	var d User
-
 	if err := json.Unmarshal(body1, &d); err != nil {
 		log.Fatal(err)
 	}
@@ -379,6 +396,7 @@ func deleteuser(c *gin.Context) {
 	id := strconv.Itoa(d.ID)
 	url2 := "http://localhost:8081/users/" + id
 
+	// apiでユーザーの削除
 	req2, err := http.NewRequest("DELETE", url2, nil)
 	if err != nil {
 		log.Fatal(err)
@@ -391,40 +409,39 @@ func deleteuser(c *gin.Context) {
 	}
 	defer resp2.Body.Close()
 
+	// セッションの解除
 	session.Clear()
 	session.Save()
 
+	// 削除メッセージとゲストに切り替え
 	result := "userを削除しました。"
-
 	uname = "ゲスト"
 	msg := "現在ゲストで使用しています。ログインしましょう。"
 	c.HTML(200, "top.html", gin.H{"user": uname, "message": msg, "result": result})
-
-	// c.HTML(200, "index.html", gin.H{"result": result})
 }
 
+// ユーザー名の変更
 func renameuser(c *gin.Context) {
+	//ログイン中のユーザー名取得
 	session := sessions.Default(c)
 	uname, _ := session.Get("uname").(string)
-	url1 := "http://localhost:8081/users/showname/" + uname
 
+	// apiでユーザー名からidの取得
+	url1 := "http://localhost:8081/users/showname/" + uname
 	resp1, err := http.Get(url1)
 	if err != nil {
 		log.Fatal(err)
-		// return
 	}
 	defer resp1.Body.Close()
 
+	// 取得したjsonのオープン
 	body1, err := io.ReadAll(resp1.Body)
 	if err != nil {
-		// msg := "id見つからないよ"
-		// c.HTML(200, "error.html", gin.H{"err": err, "message": msg})
 		log.Fatal(err)
-		// return
 	}
 
+	// openしたjsonを構造体にデコード
 	var d User
-
 	if err := json.Unmarshal(body1, &d); err != nil {
 		log.Fatal(err)
 	}
@@ -432,17 +449,20 @@ func renameuser(c *gin.Context) {
 
 	id := strconv.Itoa(d.ID)
 	password := d.Password
+	// 変更後のユーザー名取得
 	rename := c.PostForm("rename")
 	url2 := "http://localhost:8081/users/" + id
 
+	// 未入力か確認
 	if rename == "" {
-		// msg := "入力されてない項目があるよ"
-		// c.HTML(200, "error.html", gin.H{"message": msg})
 		c.Redirect(303, "/menu/settings/renameuser")
 		return
 	}
 
+	// 登録内容をjsonに設定
 	jsonStr := `{"Name":"` + rename + `","Password":"` + password + `"}`
+
+	// apiでユーザー名の更新
 	req, err := http.NewRequest(
 		"PUT",
 		url2,
@@ -462,8 +482,8 @@ func renameuser(c *gin.Context) {
 	}
 	defer resp.Body.Close()
 
+	// 更新メッセージと更新後のユーザー名でセッション確立
 	result := "usernameを更新しました。"
-
 	session.Set("uname", rename)
 	session.Save()
 	reuname, _ := session.Get("uname").(string)
@@ -471,67 +491,66 @@ func renameuser(c *gin.Context) {
 	c.HTML(200, "top.html", gin.H{"user": reuname, "result": result})
 }
 
+// メモ機能
+
 func memo(c *gin.Context) {
+	// ログイン中のユーザー名取得
 	session := sessions.Default(c)
 	uname, _ := session.Get("uname").(string)
+
+	// そのユーザーのメモを取得
 	m := MemoGet(uname)
+
 	c.HTML(200, "memo.html", gin.H{"memos": m})
 }
 
+// メモ取得
 func MemoGet(uname string) []Memo {
 	url := "http://localhost:8081/memos/showname/" + uname
+	// apiでユーザー名からメモの一覧を取得
 	resp, err := http.Get(url)
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer resp.Body.Close()
 
+	// 取得したjsonのオープン
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	// fmt.Println(string(body))
-
+	// openしたjsonを構造体にデコード
 	var m []Memo
-
 	if err := json.Unmarshal(body, &m); err != nil {
 		log.Fatal(err)
 	}
 
-	// fmt.Println(d)
-
 	return m
-
-	// var titleslice []string
-
-	// for _, v := range m {
-	// 	titleslice = append(titleslice, v.Title)
-	// }
-
-	// return titleslice
-
 }
 
+// メモ登録
 func memocreate(c *gin.Context) {
+	// ログイン中ユーザー名取得
 	session := sessions.Default(c)
 	uname, _ := session.Get("uname").(string)
 
 	url := "http://localhost:8081/memos"
 	username := uname
+	// 登録するメモのタイトルと本文を取得
 	title := c.PostForm("title")
 	text := c.PostForm("text")
 
+	// 未入力か確認
 	if username == "" || title == "" || text == "" {
-		// msg := "入力されてない項目があるよ"
-		// c.HTML(http.StatusBadRequest, "memo.html", gin.H{"message": msg})
-		// return
 		c.Redirect(303, "/menu/memo")
 		return
 	}
 
+	// jsonに変換
 	jsonStr := `{"Name":"` + username + `","Title":"` + title + `","Text":"` + text + `"}`
 
+	// apiにjsonを送信して登録
 	req, err := http.NewRequest(
 		"POST",
 		url,
@@ -552,265 +571,4 @@ func memocreate(c *gin.Context) {
 	defer resp.Body.Close()
 
 	c.Redirect(303, "/menu/memo")
-
-	// result := username + "を登録しました。"
-
-	// c.HTML(200, "index.html", gin.H{"result": result})
 }
-
-// func idshow(c *gin.Context) {
-// 	msg := "見つかりました"
-// 	id := c.Query("id")
-// 	if id == "" {
-// 		msg = "idが入力されていないよ"
-// 		c.HTML(200, "error.html", gin.H{"message": msg})
-// 		return
-// 	}
-
-// 	url := "http://localhost:8080/bihins/showid/" + id
-// 	resp, err := http.Get(url)
-// 	if err != nil {
-// 		msg := "id見つからないよ"
-// 		c.HTML(200, "error.html", gin.H{"err": err, "message": msg})
-// 		// log.Fatal(err)
-// 		return
-// 	}
-// 	defer resp.Body.Close()
-
-// 	body, err := io.ReadAll(resp.Body)
-// 	if err != nil {
-// 		msg := "id見つからないよ"
-// 		c.HTML(200, "error.html", gin.H{"err": err, "message": msg})
-// 		// log.Fatal(err)
-// 		return
-// 	}
-
-// 	fmt.Println(string(body))
-
-// 	var d User
-
-// 	if err := json.Unmarshal(body, &d); err != nil {
-// 		msg := "id見つからないよ"
-// 		c.HTML(200, "error.html", gin.H{"err": err, "message": msg})
-// 		// log.Fatal(err)
-// 		return
-// 	}
-// 	// fmt.Println(d.CreatedAt.Format())
-// 	// fmt.Println(d)
-// 	// fmt.Printf("%+v\n", d)
-// 	// c.JSON(http.StatusOK, gin.H{"item": d})
-// 	c.HTML(200, "list.html", gin.H{"idfind": d, "message": msg})
-// }
-
-// func danshow(c *gin.Context) {
-// 	msg := "見つかりました"
-// 	dan := c.Query("dantai")
-// 	if dan == "" {
-// 		msg = "danが入力されていないよ"
-// 		c.HTML(200, "error.html", gin.H{"message": msg})
-// 		return
-// 	}
-
-// 	url := "http://localhost:8080/bihins/showdan/" + dan
-// 	resp, err := http.Get(url)
-// 	if err != nil {
-// 		msg := "dan見つからないよ"
-// 		c.HTML(200, "error.html", gin.H{"err": err, "message": msg})
-// 		// log.Fatal(err)
-// 		return
-// 	}
-// 	defer resp.Body.Close()
-
-// 	body, err := io.ReadAll(resp.Body)
-// 	if err != nil {
-// 		msg := "id見つからないよ"
-// 		c.HTML(200, "error.html", gin.H{"err": err, "message": msg})
-// 		// log.Fatal(err)
-// 		return
-// 	}
-
-// 	fmt.Println(string(body))
-
-// 	var d []User
-
-// 	if err := json.Unmarshal(body, &d); err != nil {
-// 		msg := "id見つからないよ"
-// 		c.HTML(200, "error.html", gin.H{"err": err, "message": msg})
-// 		// log.Fatal(err)
-// 		return
-// 	}
-// 	fmt.Println(d)
-// 	// fmt.Printf("%+v\n", d)
-// 	// c.JSON(http.StatusOK, gin.H{"item": d})
-// 	c.HTML(200, "list.html", gin.H{"danfind": d, "message": msg})
-// }
-
-// func listbihin(c *gin.Context) {
-// 	url := "http://localhost:8080/bihins"
-// 	resp, err := http.Get(url)
-// 	if err != nil {
-// 		msg := "一覧の取得ができなかった"
-// 		c.HTML(200, "error.html", gin.H{"err": err, "message": msg})
-// 		// log.Fatal(err)
-// 		return
-// 	}
-// 	defer resp.Body.Close()
-
-// 	body, err := io.ReadAll(resp.Body)
-// 	if err != nil {
-// 		msg := "一覧の読み込みができなかった"
-// 		c.HTML(200, "error.html", gin.H{"err": err, "message": msg})
-// 		// log.Fatal(err)
-// 		return
-// 	}
-
-// 	fmt.Println(string(body))
-
-// 	var d []User
-
-// 	if err := json.Unmarshal(body, &d); err != nil {
-// 		msg := "一覧の変換ができなかった"
-// 		c.HTML(200, "error.html", gin.H{"err": err, "message": msg})
-// 		// log.Fatal(err)
-// 		return
-// 	}
-
-// 	fmt.Println(d)
-// 	// fmt.Printf("%+v\n", d)
-// 	// c.JSON(http.StatusOK, gin.H{"item": d})
-// 	c.HTML(200, "list.html", gin.H{"bihins": d})
-// }
-
-// func deletecheck(c *gin.Context) {
-// 	id := c.Param("id")
-// 	// id := c.Param("id")
-
-// 	url := "http://localhost:8080/bihins/showid/" + id
-// 	resp, err := http.Get(url)
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
-// 	defer resp.Body.Close()
-
-// 	body, err := io.ReadAll(resp.Body)
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
-
-// 	fmt.Println(string(body))
-
-// 	var d User
-
-// 	if err := json.Unmarshal(body, &d); err != nil {
-// 		if err, ok := err.(*json.SyntaxError); ok {
-// 			fmt.Println(string(body[err.Offset-1:]))
-// 		}
-// 		// 2009/11/10 23:00:00 json: cannot unmarshal string into Go struct field .C of type int
-// 		log.Fatal(err)
-// 	}
-
-// 	// fmt.Println(d)
-// 	// fmt.Printf("%+v\n", d)
-// 	// c.JSON(http.StatusOK, gin.H{"item": d})
-// 	c.HTML(200, "delete.html", gin.H{"list": d})
-// }
-
-// func deletebihin(c *gin.Context) {
-// id := c.Param("id")
-// // id := c.Param("id")
-// url := "http://localhost:8080/bihins/" + id
-
-// req, err := http.NewRequest("DELETE", url, nil)
-// if err != nil {
-// 	log.Fatal(err)
-// }
-
-// client := &http.Client{}
-// resp, err := client.Do(req)
-// if err != nil {
-// 	log.Fatal(err)
-// }
-// defer resp.Body.Close()
-
-// result := "削除しました。"
-
-// c.HTML(200, "index.html", gin.H{"result": result})
-// }
-
-// func koushincheck(c *gin.Context) {
-// 	id := c.Param("id")
-// 	// id := c.Param("id")
-
-// 	url := "http://localhost:8080/bihins/showid/" + id
-// 	resp, err := http.Get(url)
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
-// 	defer resp.Body.Close()
-
-// 	body, err := io.ReadAll(resp.Body)
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
-
-// 	fmt.Println(string(body))
-
-// 	var d User
-
-// 	if err := json.Unmarshal(body, &d); err != nil {
-// 		if err, ok := err.(*json.SyntaxError); ok {
-// 			fmt.Println(string(body[err.Offset-1:]))
-// 		}
-// 		log.Fatal(err)
-// 	}
-// 	// fmt.Println(d)
-// 	// fmt.Printf("%+v\n", d)
-// 	// c.JSON(http.StatusOK, gin.H{"item": d})
-// 	c.HTML(200, "koushin.html", gin.H{"list": d})
-// }
-
-// func putbihin(c *gin.Context) {
-// 	id := c.PostForm("id")
-// 	url := "http://localhost:8080/bihins/" + id
-// 	knrid := c.PostForm("knrid")
-// 	bihin := c.PostForm("bihin")
-// 	dantai := c.PostForm("dantai")
-// 	place := c.PostForm("place")
-// 	price := c.PostForm("price")
-// 	qty := c.PostForm("qty")
-// 	partnum := c.PostForm("partnum")
-// 	note := c.PostForm("note")
-// 	shishutsuid := c.PostForm("shishutsuid")
-
-// if knrid == "" || bihin == "" || dantai == "" || place == "" || price == "" || qty == "" || partnum == "" || note == "" || shishutsuid == "" {
-// 	// msg := "入力されてない項目があるよ"
-// 	// c.HTML(200, "error.html", gin.H{"message": msg})
-// 	c.Redirect(303, "/koushincheck/"+id)
-// 	return
-// }
-
-// jsonStr := `{"KnrId":"` + knrid + `","Bihin":"` + bihin + `","Dantai":"` + dantai + `","Place":"` + place + `","Price":"` + price + `","Qty":"` + qty + `","PartNum":"` + partnum + `","Note":"` + note + `","Shishutsuid":"` + shishutsuid + `"}`
-
-// req, err := http.NewRequest(
-// 	"PUT",
-// 	url,
-// 	bytes.NewBuffer([]byte(jsonStr)),
-// )
-// if err != nil {
-// 	log.Fatal(err)
-// }
-
-// // Content-Type 設定
-// req.Header.Set("Content-Type", "application/json")
-
-// client := &http.Client{}
-// resp, err := client.Do(req)
-// if err != nil {
-// 	log.Fatal(err)
-// }
-// defer resp.Body.Close()
-
-// result := "更新しました。"
-
-// c.HTML(200, "index.html", gin.H{"result": result})
-// }
