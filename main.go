@@ -22,10 +22,10 @@ type User struct {
 }
 
 type Memo struct {
-	ID       int    `json:"id"`
-	UserName string `json:"username"`
-	Title    string `json:"title"`
-	Text     string `json:"text"`
+	ID    int    `json:"id"`
+	Name  string `json:"name"`
+	Title string `json:"title"`
+	Text  string `json:"text"`
 }
 
 func (u *User) UnmarshalJSON(body []byte) error {
@@ -43,6 +43,27 @@ func (u *User) UnmarshalJSON(body []byte) error {
 	u.ID = u2.ID
 	u.Name = u2.Name
 	u.Password = u2.Password
+
+	return err
+}
+
+func (m *Memo) UnmarshalJSON(body []byte) error {
+	// 自分で新しく定義した構造体
+	m2 := &struct {
+		ID    int    `json:"id"`
+		Name  string `json:"name"`
+		Title string `json:"title"`
+		Text  string `json:"text"`
+	}{}
+	err := json.Unmarshal(body, m2)
+	if err != nil {
+		panic(err)
+	}
+	// 新しく定義した構造体の結果をもとのiに詰める
+	m.ID = m2.ID
+	m.Name = m2.Name
+	m.Title = m2.Title
+	m.Text = m2.Text
 
 	return err
 }
@@ -451,12 +472,14 @@ func renameuser(c *gin.Context) {
 }
 
 func memo(c *gin.Context) {
-	m := MemoGet()
+	session := sessions.Default(c)
+	uname, _ := session.Get("uname").(string)
+	m := MemoGet(uname)
 	c.HTML(200, "memo.html", gin.H{"memos": m})
 }
 
-func MemoGet() []string {
-	url := "http://localhost:8081/memos"
+func MemoGet(uname string) []string {
+	url := "http://localhost:8081/memos/showname/" + uname
 	resp, err := http.Get(url)
 	if err != nil {
 		log.Fatal(err)
