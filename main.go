@@ -478,7 +478,7 @@ func memo(c *gin.Context) {
 	c.HTML(200, "memo.html", gin.H{"memos": m})
 }
 
-func MemoGet(uname string) []string {
+func MemoGet(uname string) []Memo {
 	url := "http://localhost:8081/memos/showname/" + uname
 	resp, err := http.Get(url)
 	if err != nil {
@@ -501,13 +501,15 @@ func MemoGet(uname string) []string {
 
 	// fmt.Println(d)
 
-	var titleslice []string
+	return m
 
-	for _, v := range m {
-		titleslice = append(titleslice, v.Title)
-	}
+	// var titleslice []string
 
-	return titleslice
+	// for _, v := range m {
+	// 	titleslice = append(titleslice, v.Title)
+	// }
+
+	// return titleslice
 
 }
 

@@ -3,6 +3,40 @@
 <head>
     <meta charset="utf-8" />
     <title>index</title>
+    <style>
+        .gaming {
+            /* 横長で虹色を作る */
+            background: linear-gradient(to right, Magenta, yellow, Cyan, Magenta) 0% center/200%;
+            animation: gaming 2s linear infinite;
+        }
+        @keyframes gaming {
+            /* backgroundを移動させる */
+            100% { background-position-x: 200%; }
+        }
+        li{
+            display:none;
+        }
+        label span{
+            display:block;
+            background: linear-gradient(to right, Magenta, yellow, Cyan, Magenta) 0% center/200%;
+            animation: gaming 2s linear infinite;
+            color:#008080;
+            width:100px;
+            line-height:20px;
+            border-radius:4px;
+            font-size: 15px;
+            text-align:center;
+        }
+        label span:hover{
+            cursor:pointer;
+        }
+        input[type="checkbox"]{
+            display:none;
+        }
+        input[type="checkbox"]:checked + li{
+            display:block;
+        }
+    </style>
 </head>
 <body>
     <h2>memo</h2>
@@ -11,11 +45,11 @@
     <p>{{.memos}}</p>
     <p>memo一覧</p>
     {{range $v := .memos}}
-        <div>
-            <div>
-                <p>{{$v}}</p>
-            </div>
-        </div>
+        <label>
+            <span>{{$v.Title}}</span>
+            <input type="checkbox">
+            <li>{{$v.Text}}</li>
+        </label><br>
     {{end}}
     <p>memo登録</p>
     <form action="/menu/memo" method="POST">
