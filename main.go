@@ -524,7 +524,8 @@ func memocreate(c *gin.Context) {
 		// msg := "入力されてない項目があるよ"
 		// c.HTML(http.StatusBadRequest, "memo.html", gin.H{"message": msg})
 		// return
-		c.Redirect(303, "/menu/top")
+		c.Redirect(303, "/menu/memo")
+		return
 	}
 
 	jsonStr := `{"Name":"` + username + `","Title":"` + title + `","Text":"` + text + `"}`
