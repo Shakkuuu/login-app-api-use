@@ -21,6 +21,13 @@ type User struct {
 	Password string `json:"password"`
 }
 
+type Memo struct {
+	ID       int    `json:"id"`
+	UserName string `json:"username"`
+	Title    string `json:"title"`
+	Text     string `json:"text"`
+}
+
 func (u *User) UnmarshalJSON(body []byte) error {
 	// 自分で新しく定義した構造体
 	u2 := &struct {
@@ -58,6 +65,8 @@ func main() {
 
 	menu := r.Group("/menu")
 	menu.GET("/top", top)
+	menu.GET("/memo", memo)
+	menu.POST("/memo", memocreate)
 
 	settings := menu.Group("/settings")
 	settings.GET("/deleteuser", deleteusercheck)
@@ -439,6 +448,88 @@ func renameuser(c *gin.Context) {
 	reuname, _ := session.Get("uname").(string)
 
 	c.HTML(200, "top.html", gin.H{"user": reuname, "result": result})
+}
+
+func memo(c *gin.Context) {
+	m := MemoGet()
+	c.HTML(200, "memo.html", gin.H{"memos": m})
+}
+
+func MemoGet() []string {
+	url := "http://localhost:8081/memos"
+	resp, err := http.Get(url)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// fmt.Println(string(body))
+
+	var m []Memo
+
+	if err := json.Unmarshal(body, &m); err != nil {
+		log.Fatal(err)
+	}
+
+	// fmt.Println(d)
+
+	var titleslice []string
+
+	for _, v := range m {
+		titleslice = append(titleslice, v.Title)
+	}
+
+	return titleslice
+
+}
+
+func memocreate(c *gin.Context) {
+	session := sessions.Default(c)
+	uname, _ := session.Get("uname").(string)
+
+	url := "http://localhost:8081/memos"
+	username := uname
+	title := c.PostForm("title")
+	text := c.PostForm("text")
+
+	if username == "" || title == "" || text == "" {
+		// msg := "入力されてない項目があるよ"
+		// c.HTML(http.StatusBadRequest, "memo.html", gin.H{"message": msg})
+		// return
+		c.Redirect(303, "/menu/top")
+	}
+
+	jsonStr := `{"Name":"` + username + `","Title":"` + title + `","Text":"` + text + `"}`
+
+	req, err := http.NewRequest(
+		"POST",
+		url,
+		bytes.NewBuffer([]byte(jsonStr)),
+	)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Content-Type 設定
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer resp.Body.Close()
+
+	c.Redirect(303, "/menu/memo")
+
+	// result := username + "を登録しました。"
+
+	// c.HTML(200, "index.html", gin.H{"result": result})
 }
 
 // func idshow(c *gin.Context) {

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>index</title>
+</head>
+<body>
+    <h2>memo</h2>
+    {{.message}}
+    {{.result}}
+    <p>{{.memos}}</p>
+    <p>memo一覧</p>
+    {{range $v := .memos}}
+        <div>
+            <div>
+                <p>{{$v}}</p>
+            </div>
+        </div>
+    {{end}}
+    <p>memo登録</p>
+    <form action="/menu/memo" method="POST">
+        <div>
+            <input type="text" name="title" placeholder="title">
+        </div>
+        <div>
+            <input type="text" name="text">
+        </div>
+        <p><input type="submit" value="メモ登録"></p>
+    </form>
+    <!-- <p>削除</p>
+    <form action="/deletebihin" method="POST">
+        <input type="text" name="id" placeholder="例:1">
+        <p><input type="submit"></p>
+    </form> -->
+    <!-- <p><a href="/login">login</a></p>
+    <p><a href="/signup">signup</a></p> -->
+</body>
+</html>
