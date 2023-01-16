@@ -29,6 +29,7 @@ var msg string
 
 var ticket int
 var coin int
+var kai int
 
 type Gachaservice struct{}
 
@@ -53,13 +54,20 @@ func (gg Gachaservice) TCSet(uname string) {
 }
 
 func (gg Gachaservice) GachaGame(c *gin.Context) {
+	//ログイン中のユーザー名取得
+	session := sessions.Default(c)
+	uname, _ := session.Get("uname").(string)
+
 	play = gacha.NewPlay(p)
 
 	results, err := getResults(db, 200)
 
-	ti, co := p.Maisu()
-	kai := p.DrawableNum()
-	fmt.Printf("チケット:%d コイン:%d 引ける回数:%d \n", ti, co, kai)
+	// ti, co := p.Maisu()
+	// kai := p.DrawableNum()
+	tc := ticketandcoin.TandC{}
+	ticket, coin = tc.TicketandCoinGet(uname)
+	kai = ticket + coin/10
+	fmt.Printf("チケット:%d コイン:%d 引ける回数:%d \n", ticket, coin, kai)
 
 	reamap := map[gacha.Rarity]int{}
 	for _, reav := range results {
@@ -80,8 +88,8 @@ func (gg Gachaservice) GachaGame(c *gin.Context) {
 		DB:      results,
 		One:     onere,
 		Msg:     msg,
-		Tickets: ti,
-		Coins:   co,
+		Tickets: ticket,
+		Coins:   coin,
 		Kaisu:   kai,
 		Rari:    rea,
 	}
@@ -101,7 +109,7 @@ func (gg Gachaservice) DrawGacha(c *gin.Context) {
 	uname, _ := session.Get("uname").(string)
 
 	num, err := strconv.Atoi(c.PostForm("num"))
-	kai := p.DrawableNum()
+	// kai = p.DrawableNum()
 	if kai == 0 {
 		msg = "チケットあるいはコインがありません"
 		c.Redirect(303, "/menu/gachagame")
@@ -121,6 +129,14 @@ func (gg Gachaservice) DrawGacha(c *gin.Context) {
 
 	for i := 0; i < num; i++ {
 		if !play.Draw() {
+			if err := saveResult(db, play.Result()); err != nil {
+				fmt.Println(err)
+				return
+			}
+
+			subdraw(uname)
+
+			onere = append(onere, play.Result().String())
 			break
 		}
 
@@ -129,16 +145,9 @@ func (gg Gachaservice) DrawGacha(c *gin.Context) {
 			return
 		}
 
+		subdraw(uname)
+
 		onere = append(onere, play.Result().String())
-
-		tc := ticketandcoin.TandC{}
-		tic, _ := tc.TicketandCoinGet(uname)
-		if tic > 0 {
-			tc.TicketSub(uname)
-			continue
-		}
-
-		tc.CoinSub(uname) // 1回あたり10枚消費する
 	}
 
 	if err := play.Err(); err != nil {
@@ -147,6 +156,18 @@ func (gg Gachaservice) DrawGacha(c *gin.Context) {
 	}
 
 	c.Redirect(303, "/menu/gachagame")
+}
+
+func subdraw(uname string) {
+	tc := ticketandcoin.TandC{}
+	tic, _ := tc.TicketandCoinGet(uname)
+	if tic > 0 {
+		tc.TicketSub(uname)
+		return
+	}
+	for range make([]struct{}, 10) {
+		tc.CoinSub(uname) // 1回あたり10枚消費する
+	}
 }
 
 func CreateTable(db *sql.DB) error {
