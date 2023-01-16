@@ -10,10 +10,16 @@ import (
 	"os/exec"
 	"strconv"
 
+	"login-api-use/entity"
+	"login-api-use/memo"
+
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
 )
+
+type User entity.User
+type Memo entity.Memo
 
 // UserのJSONをUser構造体にデコード
 func (u *User) UnmarshalJSON(body []byte) error {
@@ -75,10 +81,11 @@ func main() {
 	r.POST("/signup", signupuser)
 
 	// ログイン後のトップページ
+	ms := memo.Memoservice{}
 	menu := r.Group("/menu")
-	menu.GET("/top", top)
-	menu.GET("/memo", memo)
-	menu.POST("/memo", memocreate)
+	menu.GET("/top", ms.Top)
+	menu.GET("/memo", ms.Memo)
+	menu.POST("/memo", ms.MemoCreate)
 
 	// user設定ページ
 	settings := menu.Group("/settings")

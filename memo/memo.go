@@ -7,12 +7,17 @@ import (
 	"log"
 	"net/http"
 
+	"login-api-use/entity"
+
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 )
 
+type Memoservice struct{}
+type Memo entity.Memo
+
 // ログイン後のトップページ
-func top(c *gin.Context) {
+func (ms Memoservice) Top(c *gin.Context) {
 	// ログインしているユーザー名を取得
 	session := sessions.Default(c)
 	uname, _ := session.Get("uname").(string)
@@ -30,19 +35,19 @@ func top(c *gin.Context) {
 
 // メモ機能
 
-func memo(c *gin.Context) {
+func (ms Memoservice) Memo(c *gin.Context) {
 	// ログイン中のユーザー名取得
 	session := sessions.Default(c)
 	uname, _ := session.Get("uname").(string)
 
 	// そのユーザーのメモを取得
-	m := MemoGet(uname)
+	m := ms.MemoGet(uname)
 
 	c.HTML(200, "memo.html", gin.H{"memos": m})
 }
 
 // メモ取得
-func MemoGet(uname string) []Memo {
+func (ms Memoservice) MemoGet(uname string) []Memo {
 	url := "http://localhost:8081/memos/showname/" + uname
 	// apiでユーザー名からメモの一覧を取得
 	resp, err := http.Get(url)
@@ -67,7 +72,7 @@ func MemoGet(uname string) []Memo {
 }
 
 // メモ登録
-func memocreate(c *gin.Context) {
+func (ms Memoservice) MemoCreate(c *gin.Context) {
 	// ログイン中ユーザー名取得
 	session := sessions.Default(c)
 	uname, _ := session.Get("uname").(string)
