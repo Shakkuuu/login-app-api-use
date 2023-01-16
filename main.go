@@ -7,10 +7,12 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"os"
 	"os/exec"
 	"strconv"
 
 	"github.com/Shakkuuu/login-app-api-use/entity"
+	"github.com/Shakkuuu/login-app-api-use/gachagame"
 	"github.com/Shakkuuu/login-app-api-use/memo"
 
 	"github.com/gin-contrib/sessions"
@@ -82,10 +84,17 @@ func main() {
 
 	// ログイン後のトップページ
 	ms := memo.Memoservice{}
+	gg := gachagame.Gachaservice{}
+	if err := gg.GachaCreate(); err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
 	menu := r.Group("/menu")
 	menu.GET("/top", ms.Top)
 	menu.GET("/memo", ms.Memo)
+	menu.GET("/gachagame", gg.GachaGame)
 	menu.POST("/memo", ms.MemoCreate)
+	menu.POST("/draw", gg.DrawGacha)
 
 	// user設定ページ
 	settings := menu.Group("/settings")

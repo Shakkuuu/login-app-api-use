@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+	<head>
+        <meta charset="utf-8" />
+        <title>ガチャ</title>
+    </head>
+	<body>
+		<p>{{.Msg}}</p>
+		<p>チケット数:{{.Tickets}} コイン数:{{.Coins}} 引ける回数:{{.Kaisu}}</p>
+		<form action="/menu/draw" method="POST">
+			<label for="num">回数</input>
+			<input type="number" name="num" min="1" value="1">
+			<input type="submit" value="ガチャを引く">
+		</form>
+		<h2>ガチャ結果</h2>
+		<ol>{{range $o := .One}}
+		<li>{{$o}}</li>
+		{{end}}</ol>
+		<p><a href="/menu/top">topに戻る</a></p>
+		<h2>結果一覧</h2>
+		<p>{{.Rari}}</p>
+		<ol>{{range $d := .DB}}
+		<li>{{$d}}</li>
+		{{end}}</ol>
+	</body>
+</html>
