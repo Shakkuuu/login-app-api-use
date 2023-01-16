@@ -14,6 +14,7 @@ import (
 	"github.com/Shakkuuu/login-app-api-use/entity"
 	"github.com/Shakkuuu/login-app-api-use/gachagame"
 	"github.com/Shakkuuu/login-app-api-use/memo"
+	"github.com/Shakkuuu/login-app-api-use/ticketandcoin"
 
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-contrib/sessions/cookie"
@@ -30,6 +31,8 @@ func (u *User) UnmarshalJSON(body []byte) error {
 		ID       int    `json:"id"`
 		Name     string `json:"name"`
 		Password string `json:"password"`
+		Ticket   int    `json:"ticket"`
+		Coin     int    `json:"coin"`
 	}{}
 	err := json.Unmarshal(body, u2)
 	if err != nil {
@@ -39,6 +42,8 @@ func (u *User) UnmarshalJSON(body []byte) error {
 	u.ID = u2.ID
 	u.Name = u2.Name
 	u.Password = u2.Password
+	u.Ticket = u2.Ticket
+	u.Coin = u2.Coin
 
 	return err
 }
@@ -89,12 +94,17 @@ func main() {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
+	tc := ticketandcoin.TandC{}
 	menu := r.Group("/menu")
-	menu.GET("/top", ms.Top)
+	menu.GET("/top", top)
 	menu.GET("/memo", ms.Memo)
 	menu.GET("/gachagame", gg.GachaGame)
+	menu.GET("/tandc", tc.TicketandCoin)
+
 	menu.POST("/memo", ms.MemoCreate)
 	menu.POST("/draw", gg.DrawGacha)
+	menu.POST("/tadd", tc.TicketAdd)
+	menu.POST("/cadd", tc.CoinAdd)
 
 	// user設定ページ
 	settings := menu.Group("/settings")
@@ -106,6 +116,26 @@ func main() {
 
 	// 8082ポートで起動
 	r.Run(":8082")
+}
+
+// ログイン後のトップページ
+func top(c *gin.Context) {
+	// ログインしているユーザー名を取得
+	session := sessions.Default(c)
+	uname, _ := session.Get("uname").(string)
+
+	gg := gachagame.Gachaservice{}
+	gg.TCSet(uname)
+
+	// ログインせずにアクセスされた場合のゲストモード
+	if uname == "" {
+		uname = "ゲスト"
+		msg := "現在ゲストで使用しています。ログインしましょう。"
+		c.HTML(200, "top.html", gin.H{"user": uname, "message": msg})
+		return
+	}
+
+	c.HTML(200, "top.html", gin.H{"user": uname})
 }
 
 // ログイン前のindexページ

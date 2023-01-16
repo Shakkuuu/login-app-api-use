@@ -7,6 +7,8 @@ import (
 
 	"github.com/Shakkuuu/gacha-golang/gacha"
 	"github.com/Shakkuuu/login-app-api-use/entity"
+	"github.com/Shakkuuu/login-app-api-use/ticketandcoin"
+	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"github.com/tenntenn/sqlite"
 )
@@ -25,6 +27,9 @@ var onere []string
 // var rere []string
 var msg string
 
+var ticket int
+var coin int
+
 type Gachaservice struct{}
 
 func (gg Gachaservice) GachaCreate() error {
@@ -37,12 +42,14 @@ func (gg Gachaservice) GachaCreate() error {
 		return err
 	}
 
-	tickets := 20
-	coin := 100
-	// チケット数とコイン数の設定
-	p = gacha.NewPlayer(tickets, coin)
-
 	return nil
+}
+
+func (gg Gachaservice) TCSet(uname string) {
+	tc := ticketandcoin.TandC{}
+	ticket, coin = tc.TicketandCoinGet(uname)
+	// チケット数とコイン数の設定
+	p = gacha.NewPlayer(ticket, coin)
 }
 
 func (gg Gachaservice) GachaGame(c *gin.Context) {
@@ -89,6 +96,10 @@ func (gg Gachaservice) GachaGame(c *gin.Context) {
 }
 
 func (gg Gachaservice) DrawGacha(c *gin.Context) {
+	//ログイン中のユーザー名取得
+	session := sessions.Default(c)
+	uname, _ := session.Get("uname").(string)
+
 	num, err := strconv.Atoi(c.PostForm("num"))
 	kai := p.DrawableNum()
 	if kai == 0 {
@@ -119,6 +130,15 @@ func (gg Gachaservice) DrawGacha(c *gin.Context) {
 		}
 
 		onere = append(onere, play.Result().String())
+
+		tc := ticketandcoin.TandC{}
+		tic, _ := tc.TicketandCoinGet(uname)
+		if tic > 0 {
+			tc.TicketSub(uname)
+			continue
+		}
+
+		tc.CoinSub(uname) // 1回あたり10枚消費する
 	}
 
 	if err := play.Err(); err != nil {

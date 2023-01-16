@@ -16,23 +16,6 @@ import (
 type Memoservice struct{}
 type Memo entity.Memo
 
-// ログイン後のトップページ
-func (ms Memoservice) Top(c *gin.Context) {
-	// ログインしているユーザー名を取得
-	session := sessions.Default(c)
-	uname, _ := session.Get("uname").(string)
-
-	// ログインせずにアクセスされた場合のゲストモード
-	if uname == "" {
-		uname = "ゲスト"
-		msg := "現在ゲストで使用しています。ログインしましょう。"
-		c.HTML(200, "top.html", gin.H{"user": uname, "message": msg})
-		return
-	}
-
-	c.HTML(200, "top.html", gin.H{"user": uname})
-}
-
 // メモ機能
 
 func (ms Memoservice) Memo(c *gin.Context) {
@@ -41,13 +24,13 @@ func (ms Memoservice) Memo(c *gin.Context) {
 	uname, _ := session.Get("uname").(string)
 
 	// そのユーザーのメモを取得
-	m := ms.MemoGet(uname)
+	m := memoGet(uname)
 
 	c.HTML(200, "memo.html", gin.H{"memos": m})
 }
 
 // メモ取得
-func (ms Memoservice) MemoGet(uname string) []Memo {
+func memoGet(uname string) []Memo {
 	url := "http://localhost:8081/memos/showname/" + uname
 	// apiでユーザー名からメモの一覧を取得
 	resp, err := http.Get(url)
