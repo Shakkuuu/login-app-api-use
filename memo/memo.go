@@ -7,7 +7,7 @@ import (
 	"log"
 	"net/http"
 
-	"login-api-use/entity"
+	"github.com/Shakkuuu/login-app-api-use/entity"
 
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"

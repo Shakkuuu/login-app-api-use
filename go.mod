@@ -1,4 +1,4 @@
-module login-api-use
+module github.com/Shakkuuu/login-app-api-use
 
 go 1.19
 

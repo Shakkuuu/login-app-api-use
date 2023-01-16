@@ -10,8 +10,8 @@ import (
 	"os/exec"
 	"strconv"
 
-	"login-api-use/entity"
-	"login-api-use/memo"
+	"github.com/Shakkuuu/login-app-api-use/entity"
+	"github.com/Shakkuuu/login-app-api-use/memo"
 
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-contrib/sessions/cookie"
