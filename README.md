@@ -64,6 +64,6 @@
 * go: version go1.19.4 darwin/arm64
 * 使用パッケージ  
 標準  
-``` bytes, fmt, io, log, net/http, os, os/exec, strconv, database/sql ```
+``` bytes, fmt, io, log, net/http, os, os/exec, strconv, database/sql ```  
 その他  
 ```github.com/tenntenn/sqlite, github.com/Shakkuuu/gacha-golang/gacha, github.com/Shakkuuu/login-app-api-use/entity, github.com/Shakkuuu/login-app-api-use/gachagame, github.com/Shakkuuu/login-app-api-use/memo, github.com/Shakkuuu/login-app-api-use/ticketandcoin, github.com/gin-contrib/sessions, github.com/gin-contrib/sessions/cookie, github.com/gin-gonic/gin```
