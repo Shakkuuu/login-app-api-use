@@ -1,5 +1,8 @@
 # login-app-api-use
 
+このアプリケーションは、github.com/Shakkuuu/login-app-api をAPIとして使用しています。  
+APIをdockerで起動させ、localhost:8081/users にアクセスしてGETやPOST、PUT、DELETEを行っています。
+
 ## 使い方
 
 1. localサーバを起動  
