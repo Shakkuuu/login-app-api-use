@@ -13,6 +13,14 @@ type User struct {
 	Coin     int    `json:"coin"`
 }
 
+// Coin
+type Coin struct {
+	Name      string  `json:"name"`
+	Qty       float32 `json:"qty"`
+	Speed     float32 `json:"speed"`
+	Speedneed float32 `json:"speedneed"`
+}
+
 // memoの構造体
 type Memo struct {
 	ID    int    `json:"id"`

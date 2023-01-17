@@ -14,6 +14,7 @@ import (
 	"github.com/Shakkuuu/login-app-api-use/entity"
 	"github.com/Shakkuuu/login-app-api-use/gachagame"
 	"github.com/Shakkuuu/login-app-api-use/memo"
+	"github.com/Shakkuuu/login-app-api-use/minigame"
 	"github.com/Shakkuuu/login-app-api-use/ticketandcoin"
 
 	"github.com/gin-contrib/sessions"
@@ -94,14 +95,23 @@ func main() {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
+	mg := minigame.MG{}
+	mg.MinigameSet()
 	tc := ticketandcoin.TandC{}
 	menu := r.Group("/menu")
 	menu.GET("/top", top)
 	menu.GET("/memo", ms.Memo)
+
 	menu.GET("/gachagame", gg.GachaGame)
 	menu.GET("/tandc", tc.TicketandCoin)
 
+	menu.GET("/minigame", mg.Minigamemain)
+
 	menu.POST("/memo", ms.MemoCreate)
+
+	menu.POST("/addcoin", mg.Addcoin)
+	menu.POST("/createspeedup", mg.CreateSpeedUp)
+
 	menu.POST("/draw", gg.DrawGacha)
 	menu.POST("/tadd", tc.TicketAdd)
 	menu.POST("/cadd", tc.CoinAdd)
