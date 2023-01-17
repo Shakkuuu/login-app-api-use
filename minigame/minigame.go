@@ -47,12 +47,12 @@ func (mg MG) Minigamemain(c *gin.Context) {
 
 func (mg MG) Addcoin(c *gin.Context) {
 	coin.Qty += coin.Speed
-	c.Redirect(303, "/menu/minigame")
+	c.Redirect(303, "/menu/game/minigame")
 }
 
 func (mg MG) CreateSpeedUp(c *gin.Context) {
 	if int(coin.Qty) < int(coin.Speedneed) {
-		c.Redirect(303, "/menu/minigame")
+		c.Redirect(303, "/menu/game/minigame")
 		return
 	}
 
@@ -60,5 +60,5 @@ func (mg MG) CreateSpeedUp(c *gin.Context) {
 	coin.Speed += 0.4
 
 	coin.Speedneed *= 1.7
-	c.Redirect(303, "/menu/minigame")
+	c.Redirect(303, "/menu/game/minigame")
 }

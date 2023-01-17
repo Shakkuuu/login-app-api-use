@@ -6,10 +6,10 @@
     </head>
 	<body>
 		<p>チケット数:{{.Tickets}} コイン数:{{.Coins}}</p>
-        <form action="/menu/tadd" method="POST">
+        <form action="/menu/game/tadd" method="POST">
 			<input type="submit" value="tadd">
 		</form>
-        <form action="/menu/cadd" method="POST">
+        <form action="/menu/game/cadd" method="POST">
 			<input type="submit" value="cadd">
 		</form>
 		<p><a href="/menu/top">topに戻る</a></p>

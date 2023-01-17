@@ -71,7 +71,7 @@ func (tc TandC) TicketAdd(c *gin.Context) {
 	url := "http://localhost:8081/users/tiadd/" + uname
 	http.Get(url)
 
-	c.Redirect(303, "/menu/tandc")
+	c.Redirect(303, "/menu/game/tandc")
 }
 
 func (tc TandC) CoinAdd(c *gin.Context) {
@@ -83,7 +83,7 @@ func (tc TandC) CoinAdd(c *gin.Context) {
 	url := "http://localhost:8081/users/coadd/" + uname
 	http.Get(url)
 
-	c.Redirect(303, "/menu/tandc")
+	c.Redirect(303, "/menu/game/tandc")
 }
 
 func (tc TandC) TicketSub(uname string) {

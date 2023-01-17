@@ -112,13 +112,13 @@ func (gg Gachaservice) DrawGacha(c *gin.Context) {
 	// kai = p.DrawableNum()
 	if kai == 0 {
 		msg = "チケットあるいはコインがありません"
-		c.Redirect(303, "/menu/gachagame")
+		c.Redirect(303, "/menu/game/gachagame")
 		return
 	}
 	if num > kai {
 		// fmt.Println("引ける回数を超えてます")
 		msg = "引ける回数を超えてます"
-		c.Redirect(303, "/menu/gachagame")
+		c.Redirect(303, "/menu/game/gachagame")
 		return
 	}
 	// numnum = num
@@ -155,7 +155,7 @@ func (gg Gachaservice) DrawGacha(c *gin.Context) {
 		return
 	}
 
-	c.Redirect(303, "/menu/gachagame")
+	c.Redirect(303, "/menu/game/gachagame")
 }
 
 func subdraw(uname string) {

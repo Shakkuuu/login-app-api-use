@@ -95,26 +95,25 @@ func main() {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
+	tc := ticketandcoin.TandC{}
 	mg := minigame.MG{}
 	mg.MinigameSet()
-	tc := ticketandcoin.TandC{}
+
 	menu := r.Group("/menu")
 	menu.GET("/top", top)
 	menu.GET("/memo", ms.Memo)
-
-	menu.GET("/gachagame", gg.GachaGame)
-	menu.GET("/tandc", tc.TicketandCoin)
-
-	menu.GET("/minigame", mg.Minigamemain)
-
 	menu.POST("/memo", ms.MemoCreate)
 
-	menu.POST("/addcoin", mg.Addcoin)
-	menu.POST("/createspeedup", mg.CreateSpeedUp)
+	game := menu.Group("/game")
+	game.GET("/gachagame", gg.GachaGame)
+	game.GET("/tandc", tc.TicketandCoin)
+	game.POST("/draw", gg.DrawGacha)
+	game.POST("/tadd", tc.TicketAdd)
+	game.POST("/cadd", tc.CoinAdd)
 
-	menu.POST("/draw", gg.DrawGacha)
-	menu.POST("/tadd", tc.TicketAdd)
-	menu.POST("/cadd", tc.CoinAdd)
+	game.GET("/minigame", mg.Minigamemain)
+	game.POST("/addcoin", mg.Addcoin)
+	game.POST("/createspeedup", mg.CreateSpeedUp)
 
 	// user設定ページ
 	settings := menu.Group("/settings")

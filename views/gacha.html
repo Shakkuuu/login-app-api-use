@@ -7,7 +7,7 @@
 	<body>
 		<p>{{.Msg}}</p>
 		<p>チケット数:{{.Tickets}} コイン数:{{.Coins}} 引ける回数:{{.Kaisu}}</p>
-		<form action="/menu/draw" method="POST">
+		<form action="/menu/game/draw" method="POST">
 			<label for="num">回数</input>
 			<input type="number" name="num" min="1" value="1">
 			<input type="submit" value="ガチャを引く">
@@ -16,7 +16,7 @@
 		<ol>{{range $o := .One}}
 		<li>{{$o}}</li>
 		{{end}}</ol>
-		<p><a href="/menu/tandc">チケットとコイン</a></p>
+		<p><a href="/menu/game/tandc">チケットとコイン</a></p>
 		<p><a href="/menu/top">topに戻る</a></p>
 		<h2>結果一覧</h2>
 		<p>{{.Rari}}</p>
