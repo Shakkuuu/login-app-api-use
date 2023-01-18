@@ -24,6 +24,7 @@ import (
 
 type User entity.User
 type Memo entity.Memo
+type Coin entity.Coin
 
 // UserのJSONをUser構造体にデコード
 func (u *User) UnmarshalJSON(body []byte) error {
@@ -71,6 +72,30 @@ func (m *Memo) UnmarshalJSON(body []byte) error {
 	return err
 }
 
+// MemoのJSONをMemo構造体にデコード
+func (co *Coin) UnmarshalJSON(body []byte) error {
+	// 自分で新しく定義した構造体
+	co2 := &struct {
+		ID        int     `json:"id"`
+		Name      string  `json:"name"`
+		Qty       float32 `json:"qty"`
+		Speed     float32 `json:"speed"`
+		Speedneed float32 `json:"speedneed"`
+	}{}
+	err := json.Unmarshal(body, co2)
+	if err != nil {
+		panic(err)
+	}
+	// 新しく定義した構造体の結果をもとのmに詰める
+	co.ID = co2.ID
+	co.Name = co2.Name
+	co.Qty = co2.Qty
+	co.Speed = co2.Speed
+	co.Speedneed = co2.Speedneed
+
+	return err
+}
+
 func main() {
 	fmt.Println("start")
 
@@ -97,23 +122,25 @@ func main() {
 	}
 	tc := ticketandcoin.TandC{}
 	mg := minigame.MG{}
-	mg.MinigameSet()
 
 	menu := r.Group("/menu")
 	menu.GET("/top", top)
 	menu.GET("/memo", ms.Memo)
+
 	menu.POST("/memo", ms.MemoCreate)
 
 	game := menu.Group("/game")
 	game.GET("/gachagame", gg.GachaGame)
 	game.GET("/tandc", tc.TicketandCoin)
+
 	game.POST("/draw", gg.DrawGacha)
 	game.POST("/tadd", tc.TicketAdd)
 	game.POST("/cadd", tc.CoinAdd)
 
 	game.GET("/minigame", mg.Minigamemain)
+
 	game.POST("/addcoin", mg.Addcoin)
-	game.POST("/createspeedup", mg.CreateSpeedUp)
+	game.POST("/addspeedup", mg.AddSpeedUp)
 
 	// user設定ページ
 	settings := menu.Group("/settings")

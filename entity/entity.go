@@ -15,6 +15,7 @@ type User struct {
 
 // Coin
 type Coin struct {
+	ID        int     `json:"id"`
 	Name      string  `json:"name"`
 	Qty       float32 `json:"qty"`
 	Speed     float32 `json:"speed"`
