@@ -160,16 +160,16 @@ func top(c *gin.Context) {
 	session := sessions.Default(c)
 	uname, _ := session.Get("uname").(string)
 
-	gg := gachagame.Gachaservice{}
-	gg.TCSet(uname)
-
 	// ログインせずにアクセスされた場合のゲストモード
 	if uname == "" {
 		uname = "ゲスト"
-		msg := "現在ゲストで使用しています。ログインしましょう。"
+		msg := "現在ゲストで使用しています。ログインまたはアカウント登録しましょう。"
 		c.HTML(200, "top.html", gin.H{"user": uname, "message": msg})
 		return
 	}
+
+	gg := gachagame.Gachaservice{}
+	gg.TCSet(uname)
 
 	c.HTML(200, "top.html", gin.H{"user": uname})
 }
