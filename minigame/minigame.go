@@ -33,7 +33,7 @@ func (mg MG) Minigamemain(c *gin.Context) {
 	}
 
 	// 現在のコイン枚数の取得
-	coi := apicoinget(uname)
+	coi := mg.ApiCoinGet(uname)
 	fmt.Println(coi)
 	c.HTML(200, "minigame.html", gin.H{"Qty": int(coi.Qty), "Speed": coi.Speed, "Speedneed": int(coi.Speedneed)})
 }
@@ -44,7 +44,7 @@ func (mg MG) Addcoin(c *gin.Context) {
 	uname, _ := session.Get("uname").(string)
 
 	// 現在のコイン枚数の取得
-	coi := apicoinget(uname)
+	coi := mg.ApiCoinGet(uname)
 	// コインの追加
 	qty := coi.Qty + coi.Speed
 	coi2 := entity.Coin{
@@ -56,7 +56,7 @@ func (mg MG) Addcoin(c *gin.Context) {
 	}
 	fmt.Println(coi.Qty)
 	fmt.Println(coi2)
-	apicoinadd(uname, coi2)
+	mg.ApiCoinAdd(uname, coi2)
 	c.Redirect(303, "/menu/game/minigame")
 }
 
@@ -66,7 +66,7 @@ func (mg MG) AddSpeedUp(c *gin.Context) {
 	uname, _ := session.Get("uname").(string)
 
 	// 現在のコイン枚数の取得
-	coi := apicoinget(uname)
+	coi := mg.ApiCoinGet(uname)
 
 	// コイン枚数が必要なコイン枚数を超えているか
 	if int(coi.Qty) < int(coi.Speedneed) {
@@ -89,7 +89,7 @@ func (mg MG) AddSpeedUp(c *gin.Context) {
 	c.Redirect(303, "/menu/game/minigame")
 }
 
-func apicoinget(username string) entity.Coin {
+func (mg MG) ApiCoinGet(username string) entity.Coin {
 	url := "http://localhost:8081/gamecoin/showname/" + username
 	resp, err := http.Get(url)
 	if err != nil {
@@ -154,7 +154,7 @@ func apicoincreate(username string) {
 	defer resp.Body.Close()
 }
 
-func apicoinadd(uname string, coi2 entity.Coin) {
+func (mg MG) ApiCoinAdd(uname string, coi2 entity.Coin) {
 	url := "http://localhost:8081/gamecoin/" + uname
 
 	jsonData, err := json.Marshal(coi2)

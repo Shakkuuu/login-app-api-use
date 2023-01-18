@@ -135,7 +135,7 @@ func main() {
 
 	game.POST("/draw", gg.DrawGacha)
 	game.POST("/tadd", tc.TicketAdd)
-	game.POST("/cadd", tc.CoinAdd)
+	// game.POST("/cadd", tc.CoinAdd)
 
 	game.GET("/minigame", mg.Minigamemain)
 

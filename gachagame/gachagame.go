@@ -7,6 +7,7 @@ import (
 
 	"github.com/Shakkuuu/gacha-golang/gacha"
 	"github.com/Shakkuuu/login-app-api-use/entity"
+	"github.com/Shakkuuu/login-app-api-use/minigame"
 	"github.com/Shakkuuu/login-app-api-use/ticketandcoin"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
@@ -28,7 +29,8 @@ var onere []string
 var msg string
 
 var ticket int
-var coin int
+
+// var coin int
 var kai int
 
 type Gachaservice struct{}
@@ -48,9 +50,11 @@ func (gg Gachaservice) GachaCreate() error {
 
 func (gg Gachaservice) TCSet(uname string) {
 	tc := ticketandcoin.TandC{}
-	ticket, coin = tc.TicketandCoinGet(uname)
+	ticket, _ = tc.TicketandCoinGet(uname)
+	mg := minigame.MG{}
+	co := mg.ApiCoinGet(uname)
 	// チケット数とコイン数の設定
-	p = gacha.NewPlayer(ticket, coin)
+	p = gacha.NewPlayer(ticket, int(co.Qty))
 }
 
 func (gg Gachaservice) GachaGame(c *gin.Context) {
@@ -65,9 +69,11 @@ func (gg Gachaservice) GachaGame(c *gin.Context) {
 	// ti, co := p.Maisu()
 	// kai := p.DrawableNum()
 	tc := ticketandcoin.TandC{}
-	ticket, coin = tc.TicketandCoinGet(uname)
-	kai = ticket + coin/10
-	fmt.Printf("チケット:%d コイン:%d 引ける回数:%d \n", ticket, coin, kai)
+	ticket, _ = tc.TicketandCoinGet(uname)
+	mg := minigame.MG{}
+	co := mg.ApiCoinGet(uname)
+	kai = ticket + int(co.Qty)/10
+	fmt.Printf("チケット:%d コイン:%d 引ける回数:%d \n", ticket, int(co.Qty), kai)
 
 	reamap := map[gacha.Rarity]int{}
 	for _, reav := range results {
@@ -89,7 +95,7 @@ func (gg Gachaservice) GachaGame(c *gin.Context) {
 		One:     onere,
 		Msg:     msg,
 		Tickets: ticket,
-		Coins:   coin,
+		Coins:   int(co.Qty),
 		Kaisu:   kai,
 		Rari:    rea,
 	}
@@ -165,9 +171,20 @@ func subdraw(uname string) {
 		tc.TicketSub(uname)
 		return
 	}
-	for range make([]struct{}, 10) {
-		tc.CoinSub(uname) // 1回あたり10枚消費する
+	// for range make([]struct{}, 10) {
+	// 	tc.CoinSub(uname) // 1回あたり10枚消費する
+	// }
+	mg := minigame.MG{}
+	coi := mg.ApiCoinGet(uname)
+	qty := coi.Qty - float32(10)
+	coi2 := entity.Coin{
+		ID:        coi.ID,
+		Name:      coi.Name,
+		Qty:       qty,
+		Speed:     coi.Speed,
+		Speedneed: coi.Speedneed,
 	}
+	mg.ApiCoinAdd(uname, coi2)
 }
 
 func CreateTable(db *sql.DB) error {

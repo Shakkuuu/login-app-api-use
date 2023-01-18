@@ -9,6 +9,7 @@ import (
 	"os/exec"
 
 	"github.com/Shakkuuu/login-app-api-use/entity"
+	"github.com/Shakkuuu/login-app-api-use/minigame"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 )
@@ -22,10 +23,12 @@ func (tc TandC) TicketandCoin(c *gin.Context) {
 	session := sessions.Default(c)
 	uname, _ := session.Get("uname").(string)
 
-	// そのユーザーのメモを取得
-	ti, co := tc.TicketandCoinGet(uname)
+	// そのユーザーのコインを取得
+	ti, _ := tc.TicketandCoinGet(uname)
+	mg := minigame.MG{}
+	co := mg.ApiCoinGet(uname)
 
-	c.HTML(200, "ticketandcoin.html", gin.H{"Tickets": ti, "Coins": co})
+	c.HTML(200, "ticketandcoin.html", gin.H{"Tickets": ti, "Coins": int(co.Qty)})
 }
 
 func (tc TandC) TicketandCoinGet(uname string) (int, int) {
@@ -74,17 +77,17 @@ func (tc TandC) TicketAdd(c *gin.Context) {
 	c.Redirect(303, "/menu/game/tandc")
 }
 
-func (tc TandC) CoinAdd(c *gin.Context) {
-	//ログイン中のユーザー名取得
-	session := sessions.Default(c)
-	uname, _ := session.Get("uname").(string)
+// func (tc TandC) CoinAdd(c *gin.Context) {
+// 	//ログイン中のユーザー名取得
+// 	session := sessions.Default(c)
+// 	uname, _ := session.Get("uname").(string)
 
-	// apiでユーザー名からidの取得
-	url := "http://localhost:8081/users/coadd/" + uname
-	http.Get(url)
+// 	// apiでユーザー名からidの取得
+// 	url := "http://localhost:8081/users/coadd/" + uname
+// 	http.Get(url)
 
-	c.Redirect(303, "/menu/game/tandc")
-}
+// 	c.Redirect(303, "/menu/game/tandc")
+// }
 
 func (tc TandC) TicketSub(uname string) {
 
@@ -94,10 +97,10 @@ func (tc TandC) TicketSub(uname string) {
 
 }
 
-func (tc TandC) CoinSub(uname string) {
+// func (tc TandC) CoinSub(uname string) {
 
-	// apiでユーザー名からidの取得
-	url := "http://localhost:8081/users/cosub/" + uname
-	http.Get(url)
+// 	// apiでユーザー名からidの取得
+// 	url := "http://localhost:8081/users/cosub/" + uname
+// 	http.Get(url)
 
-}
+// }
