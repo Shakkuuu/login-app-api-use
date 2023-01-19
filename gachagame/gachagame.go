@@ -31,7 +31,7 @@ var msg string
 var ticket int
 
 // var coin int
-var kai int
+// var kai int
 
 type Gachaservice struct{}
 
@@ -41,7 +41,7 @@ func (gg Gachaservice) GachaCreate() error {
 		return fmt.Errorf("データベースのOpen:%w", err)
 	}
 
-	if err := CreateTable(db); err != nil {
+	if err := CreateTable(); err != nil {
 		return err
 	}
 
@@ -62,9 +62,11 @@ func (gg Gachaservice) GachaGame(c *gin.Context) {
 	session := sessions.Default(c)
 	uname, _ := session.Get("uname").(string)
 
+	gg.TCSet(uname)
+
 	play = gacha.NewPlay(p)
 
-	results, err := getResults(db, 200)
+	results, err := getResults(200)
 
 	// ti, co := p.Maisu()
 	// kai := p.DrawableNum()
@@ -72,7 +74,7 @@ func (gg Gachaservice) GachaGame(c *gin.Context) {
 	ticket, _ = tc.TicketandCoinGet(uname)
 	mg := minigame.MG{}
 	co := mg.ApiCoinGet(uname)
-	kai = ticket + int(co.Qty)/10
+	kai := ticket + int(co.Qty)/10
 	fmt.Printf("チケット:%d コイン:%d 引ける回数:%d \n", ticket, int(co.Qty), kai)
 
 	reamap := map[gacha.Rarity]int{}
@@ -115,7 +117,13 @@ func (gg Gachaservice) DrawGacha(c *gin.Context) {
 	uname, _ := session.Get("uname").(string)
 
 	num, err := strconv.Atoi(c.PostForm("num"))
-	// kai = p.DrawableNum()
+
+	tc := ticketandcoin.TandC{}
+	ticket, _ = tc.TicketandCoinGet(uname)
+	mg := minigame.MG{}
+	co := mg.ApiCoinGet(uname)
+	kai := ticket + int(co.Qty)/10
+
 	if kai == 0 {
 		msg = "チケットあるいはコインがありません"
 		c.Redirect(303, "/menu/game/gachagame")
@@ -135,7 +143,7 @@ func (gg Gachaservice) DrawGacha(c *gin.Context) {
 
 	for i := 0; i < num; i++ {
 		if !play.Draw() {
-			if err := saveResult(db, play.Result()); err != nil {
+			if err := saveResult(play.Result()); err != nil {
 				fmt.Println(err)
 				return
 			}
@@ -146,7 +154,7 @@ func (gg Gachaservice) DrawGacha(c *gin.Context) {
 			break
 		}
 
-		if err := saveResult(db, play.Result()); err != nil {
+		if err := saveResult(play.Result()); err != nil {
 			fmt.Println(err)
 			return
 		}
@@ -187,7 +195,7 @@ func subdraw(uname string) {
 	mg.ApiCoinAdd(uname, coi2)
 }
 
-func CreateTable(db *sql.DB) error {
+func CreateTable() error {
 	const sqlStr = `CREATE TABLE IF NOT EXISTS results(
 		id        INTEGER PRIMARY KEY,
 		rarity	  TEXT NOT NULL,
@@ -202,7 +210,7 @@ func CreateTable(db *sql.DB) error {
 	return nil
 }
 
-func saveResult(db *sql.DB, card *gacha.Card) error {
+func saveResult(card *gacha.Card) error {
 	const sqlStr = `INSERT INTO results(rarity, name) VALUES (?,?);`
 
 	_, err := db.Exec(sqlStr, card.Rarity.String(), card.Name)
@@ -212,7 +220,7 @@ func saveResult(db *sql.DB, card *gacha.Card) error {
 	return nil
 }
 
-func getResults(db *sql.DB, limit int) ([]*gacha.Card, error) {
+func getResults(limit int) ([]*gacha.Card, error) {
 	const sqlStr = `SELECT rarity, name FROM results LIMIT ?`
 	rows, err := db.Query(sqlStr, limit)
 	if err != nil {
