@@ -459,6 +459,19 @@ func deleteuser(c *gin.Context) {
 	}
 	defer resp2.Body.Close()
 
+	// ユーザーのメモとコインの削除
+	var derr error
+	ms := memo.Memoservice{}
+	derr = ms.MemoDelete(uname)
+	if derr != nil {
+		log.Fatal(err)
+	}
+	tc := ticketandcoin.TandC{}
+	derr = tc.CoinDelete(uname)
+	if derr != nil {
+		log.Fatal(err)
+	}
+
 	// セッションの解除
 	session.Clear()
 	session.Save()

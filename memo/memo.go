@@ -97,3 +97,22 @@ func (ms Memoservice) MemoCreate(c *gin.Context) {
 
 	c.Redirect(303, "/menu/memo")
 }
+
+// メモ削除
+func (ms Memoservice) MemoDelete(username string) error {
+	url := "http://localhost:8081/memos/" + username
+
+	// apiでユーザーの削除
+	req, err := http.NewRequest("DELETE", url, nil)
+	if err != nil {
+		return err
+	}
+
+	client := &http.Client{}
+	resp2, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp2.Body.Close()
+	return nil
+}

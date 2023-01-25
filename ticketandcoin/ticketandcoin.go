@@ -104,3 +104,22 @@ func (tc TandC) TicketSub(uname string) {
 // 	http.Get(url)
 
 // }
+
+// コイン削除
+func (tc TandC) CoinDelete(username string) error {
+	url := "http://localhost:8081/gamecoin/" + username
+
+	// apiでユーザーの削除
+	req, err := http.NewRequest("DELETE", url, nil)
+	if err != nil {
+		return err
+	}
+
+	client := &http.Client{}
+	resp2, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp2.Body.Close()
+	return nil
+}
