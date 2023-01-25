@@ -545,6 +545,14 @@ func renameuser(c *gin.Context) {
 	}
 	defer resp.Body.Close()
 
+	// ユーザーのコインのname更新
+	var perr error
+	tc := ticketandcoin.TandC{}
+	perr = tc.CoinUserPUT(uname, rename)
+	if perr != nil {
+		log.Fatal(err)
+	}
+
 	// 更新メッセージと更新後のユーザー名でセッション確立
 	result := "usernameを更新しました。"
 	session.Set("uname", rename)

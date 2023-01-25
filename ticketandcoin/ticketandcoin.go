@@ -1,6 +1,7 @@
 package ticketandcoin
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -121,5 +122,48 @@ func (tc TandC) CoinDelete(username string) error {
 		return err
 	}
 	defer resp2.Body.Close()
+	return nil
+}
+
+// コインuserアップデート
+func (tc TandC) CoinUserPUT(username string, rename string) error {
+	// 現在のコイン情報の取得
+	mg := minigame.MG{}
+	coi := mg.ApiCoinGet(username)
+	// コイン情報の修正
+	coi2 := entity.Coin{
+		ID:        coi.ID,
+		Name:      rename,
+		Qty:       coi.Qty,
+		Speed:     coi.Speed,
+		Speedneed: coi.Speedneed,
+	}
+
+	url := "http://localhost:8081/gamecoin/" + username
+
+	jsonData, err := json.Marshal(coi2)
+	if err != nil {
+		return err
+	}
+
+	// apiでユーザー名の更新
+	req, err := http.NewRequest(
+		"PUT",
+		url,
+		bytes.NewBuffer(jsonData),
+	)
+	if err != nil {
+		return err
+	}
+
+	// Content-Type 設定
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
 	return nil
 }
