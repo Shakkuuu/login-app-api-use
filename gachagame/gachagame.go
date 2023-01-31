@@ -3,7 +3,9 @@ package gachagame
 import (
 	"database/sql"
 	"fmt"
+	"math/rand"
 	"strconv"
+	"time"
 
 	"github.com/Shakkuuu/gacha-golang/gacha"
 	"github.com/Shakkuuu/login-app-api-use/entity"
@@ -110,7 +112,7 @@ func (gg Gachaservice) GachaGame(c *gin.Context) {
 		Rari:    rea,
 	}
 
-	fmt.Println(rr)
+	// fmt.Println(rr)
 
 	c.HTML(200, "gacha.html", gin.H{"DB": rr.DB, "One": rr.One, "Msg": rr.Msg, "Tickets": rr.Tickets, "Coins": rr.Coins, "Kaisu": rr.Kaisu, "Rari": rr.Rari})
 	// c.HTML(200, "gacha.html", nil)
@@ -120,12 +122,76 @@ func (gg Gachaservice) GachaGame(c *gin.Context) {
 }
 
 func (gg Gachaservice) DrawGacha(c *gin.Context) {
+	rand.Seed(time.Now().UnixNano())
+	ra1 := rand.Intn(5000)
+	ra2 := rand.Intn(5000)
+	fmt.Println(ra1 + ra2)
+	time.Sleep(time.Duration(ra1+ra2+1000) * time.Millisecond)
 	//ログイン中のユーザー名取得
 	session := sessions.Default(c)
 	uname, _ := session.Get("uname").(string)
 
-	num, err := strconv.Atoi(c.PostForm("num"))
+	// num, err := strconv.Atoi(c.PostForm("num"))
+	num, _ := strconv.Atoi(c.PostForm("num"))
 
+	go drawdraw(uname, num, c)
+
+	// tc := ticketandcoin.TandC{}
+	// ticket, _ = tc.TicketandCoinGet(uname)
+	// mg := minigame.MG{}
+	// co := mg.ApiCoinGet(uname)
+	// kai := ticket + int(co.Qty)/10
+
+	// if kai == 0 {
+	// 	msg = "チケットあるいはコインがありません"
+	// 	c.Redirect(303, "/menu/game/gachagame")
+	// 	return
+	// }
+	// if num > kai {
+	// 	// fmt.Println("引ける回数を超えてます")
+	// 	msg = "引ける回数を超えてます"
+	// 	c.Redirect(303, "/menu/game/gachagame")
+	// 	return
+	// }
+	// // numnum = num
+	// if err != nil {
+	// 	fmt.Println(err)
+	// 	return
+	// }
+
+	// for i := 0; i < num; i++ {
+	// 	if !play.Draw() {
+	// 		if err := saveResult(play.Result()); err != nil {
+	// 			fmt.Println(err)
+	// 			return
+	// 		}
+
+	// 		subdraw(uname)
+
+	// 		onere = append(onere, play.Result().String())
+	// 		break
+	// 	}
+
+	// 	if err := saveResult(play.Result()); err != nil {
+	// 		fmt.Println(err)
+	// 		return
+	// 	}
+
+	// 	subdraw(uname)
+
+	// 	onere = append(onere, play.Result().String())
+	// }
+
+	// if err := play.Err(); err != nil {
+	// 	fmt.Println(err)
+	// 	return
+	// }
+	time.Sleep(1 * time.Second)
+
+	c.Redirect(303, "/menu/game/gachagame")
+}
+
+func drawdraw(uname string, num int, c *gin.Context) {
 	tc := ticketandcoin.TandC{}
 	ticket, _ = tc.TicketandCoinGet(uname)
 	mg := minigame.MG{}
@@ -176,8 +242,6 @@ func (gg Gachaservice) DrawGacha(c *gin.Context) {
 		fmt.Println(err)
 		return
 	}
-
-	c.Redirect(303, "/menu/game/gachagame")
 }
 
 func subdraw(uname string) {
