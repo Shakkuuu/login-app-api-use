@@ -319,14 +319,14 @@ func LoginCheck(username string, password string) string {
 		log.Fatal(err)
 	}
 
-	fmt.Println(string(body))
+	// fmt.Println(string(body))
 
 	// openしたjsonを構造体にデコード
 	var d User
 	if err := json.Unmarshal(body, &d); err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println(d)
+	// fmt.Println(d)
 
 	// パスワードが一致するか確認
 	checkpass := d.Password
@@ -455,7 +455,7 @@ func deleteuser(c *gin.Context) {
 	if err := json.Unmarshal(body1, &d); err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println(d)
+	// fmt.Println(d)
 
 	id := strconv.Itoa(d.ID)
 	url2 := "http://localhost:8081/users/" + id
@@ -522,7 +522,7 @@ func renameuser(c *gin.Context) {
 	if err := json.Unmarshal(body1, &d); err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println(d)
+	// fmt.Println(d)
 
 	id := strconv.Itoa(d.ID)
 	password := d.Password

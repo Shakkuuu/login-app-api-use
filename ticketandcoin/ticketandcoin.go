@@ -62,14 +62,14 @@ func (tc TandC) TicketandCoinGet(uname string) (int, int) {
 		log.Fatal(err)
 	}
 
-	fmt.Println(string(body))
+	// fmt.Println(string(body))
 
 	// openしたjsonを構造体にデコード
 	var d User
 	if err := json.Unmarshal(body, &d); err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println(d)
+	// fmt.Println(d)
 
 	return d.Ticket, d.Coin
 }

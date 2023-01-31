@@ -42,7 +42,7 @@ func (mg MG) Minigamemain(c *gin.Context) {
 
 	// 現在のコイン枚数の取得
 	coi := mg.ApiCoinGet(uname)
-	fmt.Println(coi)
+	// fmt.Println(coi)
 	c.HTML(200, "minigame.html", gin.H{"Qty": int(coi.Qty), "Speed": coi.Speed, "Speedneed": int(coi.Speedneed)})
 }
 
@@ -62,8 +62,8 @@ func (mg MG) Addcoin(c *gin.Context) {
 		Speed:     coi.Speed,
 		Speedneed: coi.Speedneed,
 	}
-	fmt.Println(coi.Qty)
-	fmt.Println(coi2)
+	// fmt.Println(coi.Qty)
+	// fmt.Println(coi2)
 	mg.ApiCoinAdd(uname, coi2)
 	c.Redirect(303, "/menu/game/minigame")
 }
@@ -170,7 +170,7 @@ func (mg MG) ApiCoinAdd(uname string, coi2 entity.Coin) {
 		fmt.Println(err)
 		return
 	}
-	fmt.Println(string(jsonData))
+	// fmt.Println(string(jsonData))
 
 	req, err := http.NewRequest(
 		"PUT",
@@ -200,7 +200,7 @@ func apiaddspeedup(uname string, coi2 entity.Coin) {
 		fmt.Println(err)
 		return
 	}
-	fmt.Println(string(jsonData))
+	// fmt.Println(string(jsonData))
 
 	req, err := http.NewRequest(
 		"PUT",
