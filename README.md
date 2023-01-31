@@ -64,9 +64,19 @@ APIをdockerで起動させ、localhost:8081/users にアクセスしてGETやPO
 
 * macbook air M1
 * Visual Studio Code
-* go: version go1.19.4 darwin/arm64
+* go: version go1.19.5 darwin/arm64
 * 使用パッケージ  
 標準  
-``` bytes, fmt, io, log, net/http, os, os/exec, strconv, database/sql ```  
+``` bytes, fmt, io, log, net/http, os, os/exec, strconv, database/sql, math/rand, time ```  
 その他  
 ```github.com/tenntenn/sqlite, github.com/Shakkuuu/gacha-golang/gacha, github.com/Shakkuuu/login-app-api-use/entity, github.com/Shakkuuu/login-app-api-use/gachagame, github.com/Shakkuuu/login-app-api-use/memo, github.com/Shakkuuu/login-app-api-use/ticketandcoin, github.com/gin-contrib/sessions, github.com/gin-contrib/sessions/cookie, github.com/gin-gonic/gin```
+
+## 今後追加予定の機能
+
+* メモごとの編集と削除
+* 現在ガチャ機能は、アクセス時にランダムな時間待機させてからdrawするという無理矢理な方法だが、しっかりとセッションを管理したい
+* Ticketの取得方法の調整
+* minigameのアップデート
+* ユーザーごとのこれまでのガチャ結果の保存
+* ガチャで手に入れたものの有効活用
+* バリデーション(入力規則など)
