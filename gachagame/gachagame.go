@@ -62,6 +62,14 @@ func (gg Gachaservice) GachaGame(c *gin.Context) {
 	session := sessions.Default(c)
 	uname, _ := session.Get("uname").(string)
 
+	// ログインせずにアクセスされた場合のゲストモード
+	if uname == "" {
+		// uname = "ゲスト"
+		// msg := "現在ゲストで使用しています。ログインまたはアカウント登録しましょう。"
+		c.HTML(200, "error.html", nil)
+		return
+	}
+
 	gg.TCSet(uname)
 
 	play = gacha.NewPlay(p)

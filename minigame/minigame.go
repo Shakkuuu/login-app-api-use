@@ -24,6 +24,14 @@ func (mg MG) Minigamemain(c *gin.Context) {
 	session := sessions.Default(c)
 	uname, _ := session.Get("uname").(string)
 
+	// ログインせずにアクセスされた場合のゲストモード
+	if uname == "" {
+		// uname = "ゲスト"
+		// msg := "現在ゲストで使用しています。ログインまたはアカウント登録しましょう。"
+		c.HTML(200, "error.html", nil)
+		return
+	}
+
 	url := "http://localhost:8081/gamecoin/showname/" + uname
 	// ユーザーコインを持っているかチェック
 	b, _ := exec.Command("curl", url, "-X", "GET").Output()

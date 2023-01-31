@@ -23,6 +23,14 @@ func (ms Memoservice) Memo(c *gin.Context) {
 	session := sessions.Default(c)
 	uname, _ := session.Get("uname").(string)
 
+	// ログインせずにアクセスされた場合のゲストモード
+	if uname == "" {
+		// uname = "ゲスト"
+		// msg := "現在ゲストで使用しています。ログインまたはアカウント登録しましょう。"
+		c.HTML(200, "error.html", nil)
+		return
+	}
+
 	// そのユーザーのメモを取得
 	m := memoGet(uname)
 

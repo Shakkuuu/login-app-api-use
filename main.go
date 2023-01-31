@@ -206,12 +206,26 @@ func logout(c *gin.Context) {
 func deleteusercheck(c *gin.Context) {
 	session := sessions.Default(c)
 	uname, _ := session.Get("uname").(string)
+	// ログインせずにアクセスされた場合のゲストモード
+	if uname == "" {
+		// uname = "ゲスト"
+		// msg := "現在ゲストで使用しています。ログインまたはアカウント登録しましょう。"
+		c.HTML(200, "error.html", nil)
+		return
+	}
 	c.HTML(200, "deleteuser.html", gin.H{"username": uname})
 }
 
 func renameusercheck(c *gin.Context) {
 	session := sessions.Default(c)
 	uname, _ := session.Get("uname").(string)
+	// ログインせずにアクセスされた場合のゲストモード
+	if uname == "" {
+		// uname = "ゲスト"
+		// msg := "現在ゲストで使用しています。ログインまたはアカウント登録しましょう。"
+		c.HTML(200, "error.html", nil)
+		return
+	}
 	c.HTML(200, "renameuser.html", gin.H{"username": uname})
 }
 
